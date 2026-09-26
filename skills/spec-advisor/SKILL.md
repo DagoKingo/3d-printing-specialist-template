@@ -77,3 +77,27 @@ La Elegoo Centauri Carbon cuenta con cámara cerrada y hotend de 300°C con boqu
 - **PA-CF / PETG-CF:** Poliamida o PETG reforzado con fibra de carbono. Rigidez extrema, baja deformación térmica y aspecto mate profesional.
 
 > Consulta `references/materials.md` para configuraciones de temperatura y retracción.
+
+---
+
+## 🔍 Ingeniería Inversa de Mallas Muestra (Reverse Engineering con `measure.py`)
+
+Si el diseño parte de un modelo `.stl` o `.3mf` existente o muestra:
+- **No adivines medidas ni pidas al usuario 20 cotas manuales:**
+  ```bash
+  # 1. Dimensiones generales y bounding box:
+  python3 scripts/measure.py info modelo.stl
+
+  # 2. Planos y escalones característicos (alturas de caras y rebajes):
+  python3 scripts/measure.py levels modelo.stl --axis z
+
+  # 3. ¿Es un agujero pasante o un saliente/boss?:
+  python3 scripts/measure.py scan modelo.stl --at -5.0 --along x
+
+  # 4. Perfil transversal y diámetro interior/exterior real (apotema sin error poligonal):
+  python3 scripts/measure.py profile modelo.stl --from 0 --to 15 --step 0.5 --inner 10.0
+
+  # 5. Si la pieza muestra fue exportada inclinada, nivelarla horizontalmente:
+  python3 scripts/measure.py orient modelo.stl --level 45.0 --write nivelado.stl
+  ```
+

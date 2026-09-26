@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 """
 verify_mesh.py — Puerta de Imprimibilidad (Printability Gate), Normalizador y Validador FDM
-Inspirado en la ingeniería de 'idea-to-print', 'print3d' y 'meshy-3d-agent'.
+Inspirado en la ingeniería de 'idea-to-print', 'print3d', 'meshy-3d-agent' y 'mijugit/freecad-stl'.
 
 Comprueba:
 1. Límites físicos de la Elegoo Centauri Carbon (256 × 256 × 256 mm).
 2. Estanqueidad geométrica (Malla Manifold / Watertight).
-3. Estabilidad en cama (Área de contacto base y relación de esbeltez/aspect ratio).
-4. Posición vertical en Z (contacto en Z=0) y normalización Y-up a Z-up.
-5. Generación de 'manifest.json' (Job Ledger del proyecto).
+3. Autopsia quirúrgica de defectos (localización de aristas abiertas por altura Z y radio R).
+4. Estabilidad en cama (Área de contacto base y relación de esbeltez/aspect ratio).
+5. Posición vertical en Z (contacto en Z=0) y normalización Y-up a Z-up.
+6. Generación de 'manifest.json' (Job Ledger del proyecto).
 """
 
 import sys
@@ -17,6 +18,13 @@ import struct
 import hashlib
 import json
 import time
+import argparse
+import collections
+
+# Soporte transparente para entorno virtual local si existe
+for _sp in [os.path.expanduser("~/.venv-3d/lib/python3.12/site-packages"), os.path.expanduser("~/.venv/lib/python3.12/site-packages")]:
+    if os.path.exists(_sp) and _sp not in sys.path:
+        sys.path.insert(0, _sp)
 
 BED_MAX_X = 256.0
 BED_MAX_Y = 256.0
@@ -107,7 +115,94 @@ def fix_stl_coordinates(input_path, output_path=None, rotate_y_up=False, ground_
     if ground_z:
         print(f"  • Base apoyada en Z=0 (Desplazamiento Z: {z_offset:+.2f} mm)")
 
-def evaluate_mesh(filepath, generate_manifest=False, project_dir=None, material="PLA"):
+def run_stl_autopsy(filepath):
+    """
+    Autopsia quirúrgica de defectos de malla STL (inspirado en mijugit/freecad-stl).
+    Localiza aristas abiertas o no-manifold agrupadas por altura Z y radio R,
+    y analiza el perfil del barreno central.
+    """
+    try:
+        import numpy as np
+    except ImportError:
+        return {"error": "numpy no disponible para autopsia"}
+
+    with open(filepath, "rb") as fh:
+        data = fh.read()
+    if len(data) < 84:
+        return {"error": "Archivo demasiado corto"}
+    n = struct.unpack("<I", data[80:84])[0]
+    if len(data) != 84 + n * 50:
+        return {"error": f"STL binario corrupto o truncado ({n} facetas declaradas)"}
+
+    rec = np.dtype([("normal", "<3f4"), ("v", "<3,3f4"), ("attr", "<u2")])
+    arr = np.frombuffer(data, dtype=rec, count=n, offset=84)
+    tris = arr["v"].astype(np.float64)
+
+    # Soldar vértices sobre una rejilla fina (1e-5 mm)
+    flat = tris.reshape(-1, 3)
+    keys = np.round(flat * 1e5).astype(np.int64)
+    uniq, inv = np.unique(keys, axis=0, return_inverse=True)
+    idx = inv.reshape(-1, 3)
+
+    edges = np.concatenate([idx[:, [0, 1]], idx[:, [1, 2]], idx[:, [2, 0]]])
+    edges = np.sort(edges, axis=1)
+    ue, uc = np.unique(edges, axis=0, return_counts=True)
+
+    used_once = int((uc == 1).sum())
+    used_twice = int((uc == 2).sum())
+    used_3plus = int((uc > 2).sum())
+    bad = ue[uc != 2]
+
+    verts = uniq / 1e5
+    autopsy = {
+        "facets": int(n),
+        "unique_vertices": int(len(uniq)),
+        "edges_total": int(len(ue)),
+        "edges_used_once": used_once,
+        "edges_used_twice": used_twice,
+        "edges_used_3plus": used_3plus,
+        "bad_edges_count": int(len(bad)),
+        "defect_region": None,
+        "worst_z_heights": [],
+        "bore_analysis": None
+    }
+
+    if len(bad) > 0:
+        pts = verts[np.unique(bad)]
+        r = np.hypot(pts[:, 0], pts[:, 1])
+        z = pts[:, 2]
+        autopsy["defect_region"] = {
+            "bad_vertices_count": int(len(pts)),
+            "radius_min_mm": float(round(r.min(), 2)),
+            "radius_max_mm": float(round(r.max(), 2)),
+            "z_min_mm": float(round(z.min(), 2)),
+            "z_max_mm": float(round(z.max(), 2))
+        }
+        hist = collections.Counter(np.floor(z).astype(int))
+        top = sorted(hist.items(), key=lambda kv: -kv[1])[:5]
+        autopsy["worst_z_heights"] = [{"z_mm": int(h), "open_points": int(c)} for h, c in top]
+
+    # Detección de perfil de barreno (liso vs roscado)
+    rr = np.hypot(verts[:, 0], verts[:, 1])
+    zz = verts[:, 2]
+    if len(zz) > 0 and (zz.max() - zz.min()) > 2.0:
+        body = (zz > zz.min() + 1.0) & (zz < zz.max() - 1.0)
+        bore = body & (rr < rr.max() * 0.7)
+        if bore.sum() > 20:
+            br = rr[bore]
+            spread = float(br.max() - br.min())
+            is_threaded = spread > 0.2
+            autopsy["bore_analysis"] = {
+                "bore_points": int(bore.sum()),
+                "radius_min_mm": float(round(br.min(), 2)),
+                "radius_max_mm": float(round(br.max(), 2)),
+                "radius_spread_mm": float(round(spread, 3)),
+                "profile": "Roscado (radio variable)" if is_threaded else "Barreno liso (radio constante)"
+            }
+
+    return autopsy
+
+def evaluate_mesh(filepath, generate_manifest=False, project_dir=None, material="PLA", run_autopsy=False):
     if not os.path.exists(filepath):
         print(f"❌ Error: El archivo '{filepath}' no existe.")
         return False, {}
@@ -141,7 +236,7 @@ def evaluate_mesh(filepath, generate_manifest=False, project_dir=None, material=
         base_width = max(0.1, max(size[0], size[1]))
         aspect_ratio = size[2] / base_width
 
-    except ImportError:
+    except Exception:
         data = read_stl_full(filepath)
         size = data["size"]
         triangles = data["count"]
@@ -169,9 +264,11 @@ def evaluate_mesh(filepath, generate_manifest=False, project_dir=None, material=
             gate_status = "WARNING"
 
     # 4. Análisis de estanqueidad
+    autopsy_result = None
     if not is_watertight:
         warnings.append("Malla no manifold: contiene orificios o aristas compartidas por más de dos caras.")
         gate_status = "FAIL"
+        run_autopsy = True  # Disparar autopsia automáticamente al fallar estanqueidad
 
     if not fits_bed:
         warnings.append(f"La pieza excede las dimensiones máximas de la cama ({BED_MAX_X}×{BED_MAX_Y}×{BED_MAX_Z} mm).")
@@ -195,6 +292,25 @@ def evaluate_mesh(filepath, generate_manifest=False, project_dir=None, material=
     print(f"• Geometría Manifold:      {'✅ OK (Hermética)' if is_watertight else '❌ FALLO (No estanca)'}")
     print(f"• Estabilidad en Cama:     {stability_status}")
 
+    # Ejecución de Autopsia Quirúrgica
+    if run_autopsy:
+        autopsy_result = run_stl_autopsy(filepath)
+        if "error" not in autopsy_result:
+            print(f"\n🔬 Autopsia de Malla (stl_autopsy):")
+            print(f"• Aristas abiertas (usadas 1 vez):     {autopsy_result['edges_used_once']}")
+            print(f"• Aristas no-manifold (usadas 3+ vez): {autopsy_result['edges_used_3plus']}")
+            if autopsy_result["defect_region"]:
+                dr = autopsy_result["defect_region"]
+                print(f"• Región con fugas detectadas:")
+                print(f"  - Altura Z: {dr['z_min_mm']:.2f} mm .. {dr['z_max_mm']:.2f} mm")
+                print(f"  - Radio R:  {dr['radius_min_mm']:.2f} mm .. {dr['radius_max_mm']:.2f} mm")
+                if autopsy_result["worst_z_heights"]:
+                    height_str = ", ".join([f"Z={item['z_mm']}mm ({item['open_points']} pts)" for item in autopsy_result["worst_z_heights"]])
+                    print(f"  - Cotas Z con mayor concentración de fugas: {height_str}")
+            if autopsy_result["bore_analysis"]:
+                ba = autopsy_result["bore_analysis"]
+                print(f"• Barreno interior: {ba['profile']} (Radio {ba['radius_min_mm']:.2f} a {ba['radius_max_mm']:.2f} mm)")
+
     if warnings:
         print("\n⚠️ Advertencias detectadas:")
         for w in warnings:
@@ -215,7 +331,8 @@ def evaluate_mesh(filepath, generate_manifest=False, project_dir=None, material=
         "volume_cm3": round(volume_cm3, 2),
         "material": material,
         "estimated_weight_grams": round(estimated_weight_g, 1),
-        "warnings": warnings
+        "warnings": warnings,
+        "autopsy": autopsy_result
     }
 
     if generate_manifest or project_dir:
@@ -237,13 +354,19 @@ def main():
     parser.add_argument("--material", default="PLA", choices=["PLA", "PETG", "ABS", "ASA", "TPU", "PA-CF"], help="Material para estimar peso")
     parser.add_argument("--ground", action="store_true", help="Alinear la base del modelo exactamente en Z=0")
     parser.add_argument("--rotate-y-up", action="store_true", help="Rotar modelo de coordenadas Y-up a Z-up")
+    parser.add_argument("--autopsy", action="store_true", help="Forzar ejecución de autopsia de defectos y análisis de barreno")
 
     args = parser.parse_args()
 
     if args.ground or args.rotate_y_up:
         fix_stl_coordinates(args.stl_file, rotate_y_up=args.rotate_y_up, ground_z=args.ground)
 
-    passed, _ = evaluate_mesh(args.stl_file, generate_manifest=args.manifest, material=args.material)
+    passed, _ = evaluate_mesh(
+        args.stl_file,
+        generate_manifest=args.manifest,
+        material=args.material,
+        run_autopsy=args.autopsy
+    )
     sys.exit(0 if passed else 1)
 
 if __name__ == "__main__":

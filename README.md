@@ -77,8 +77,8 @@ Plantilla y marco de trabajo asistido por IA para concebir, diseñar, validar y 
 │   │
 │   ├── parametric-cad/         # Modelado paramétrico OpenSCAD (Ruta Mecánica)
 │   │   ├── SKILL.md
-│   │   ├── templates/          # starter_template.scad, remix_template.scad, viewer.html
-│   │   └── references/         # openscad_guide.md
+│   │   ├── templates/          # starter_template.scad, remix_template.scad, sweep_template.scad, viewer.html
+│   │   └── references/         # openscad_guide.md, bosl2_guide.md, freecad_headless_gotchas.md
 │   │
 │   ├── blender-mcp/            # Modelado en Blender interactivo (Ruta Orgánica)
 │   │   ├── SKILL.md
@@ -99,7 +99,9 @@ Plantilla y marco de trabajo asistido por IA para concebir, diseñar, validar y 
 │
 ├── projects/                   # Directorio de trabajo para tus modelos y proyectos
 └── scripts/                    # Herramientas de verificación, empaquetado y galería
-    ├── verify_mesh.py          # Printability Gate, normalizador Z=0 y generador de manifest.json
+    ├── measure.py              # Ingeniería inversa: mide cotas, planos, barrenos y perfiles en STL/3MF
+    ├── sweep.py                # Verificación cinemática: detecta colisiones e interferencias en piezas móviles
+    ├── verify_mesh.py          # Printability Gate con autopsia de defectos (stl_autopsy) y manifest.json
     ├── export_3mf.py           # Empaquetador multi-pieza 3MF con colores y materiales
     ├── generate_coupon.py      # Generador de probetas de calibración de tolerancias (Fit Coupons)
     └── generate_gallery.py     # Generador de capturas y visor Three.js interactivo

@@ -84,3 +84,31 @@ openscad -D 'RENDER="base"' -o projects/mi_proyecto/base.stl projects/mi_proyect
 # Exportar con alta resolución
 openscad -D 'RENDER="base"' -D '$fn=128' -o projects/mi_proyecto/base.stl projects/mi_proyecto/modelo.scad
 ```
+
+---
+
+## 📚 Librería BOSL2 (Recomendada para Mecánica FDM)
+
+Para piezas con tornillería ISO, aristas redondeadas sin artefactos, roscas imprimibles reales o engranajes, utiliza **BOSL2**:
+- Documentación y modismos verificados: [`references/bosl2_guide.md`](references/bosl2_guide.md).
+- Utiliza siempre `anchor=BOTTOM` para posar sobre la cama y `diff()` + `attach(inside=true, shiftout=0.01)` para operaciones de vaciado sin solapamientos.
+
+---
+
+## ⚙️ Validación Cinemática de Mecanismos (`sweep.py`)
+
+Para ensambles con piezas móviles (levas, bisagras, engranajes, correderas):
+- Una interferencia de 0.5 mm en un ángulo intermedio del ciclo atasca la pieza física.
+- Utiliza la plantilla [`templates/sweep_template.scad`](templates/sweep_template.scad) junto con `scripts/sweep.py`:
+  ```bash
+  python3 scripts/sweep.py chk.scad --parts base engranaje manivela --var angulo 0 360 --step 10
+  ```
+  El script calcula el volumen de colisión entre cada par de piezas a lo largo del recorrido y garantiza cero interferencias mecánicas antes de imprimir.
+
+---
+
+## 🐍 Automatización Headless en FreeCAD (Ruta Alternativa STEP/Python)
+
+Si se automatiza FreeCAD por línea de comandos (`freecadcmd`):
+- Consulta obligatoria: [`references/freecad_headless_gotchas.md`](references/freecad_headless_gotchas.md) para evitar las 10 trampas empíricas (exit code 0 en fallos, deflexión angular en radianes, pérdida de salida en `sys.exit()`, etc.).
+
