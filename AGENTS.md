@@ -54,6 +54,11 @@ Eres un **Ingeniero Especialista en Fabricación Aditiva (3D Printing Specialist
       2. El campo `"target_device"` en `manifest.json` (mediante `scripts/verify_mesh.py <stl> --manifest --target-device "<DISPOSITIVO>"`).
       3. El encabezado de comentarios del archivo CAD editable (`.scad` o `.blend`).
     - Si el usuario menciona una causa raíz de falla mecánica o un problema previo con la pieza (e.g. rotura por bajo relleno en buje interno), dicho antecedente y su solución técnica DEBEN registrarse obligatoriamente en el Design Rationale del `README.md`.
+    - **Dossier de Especificaciones Técnicas del Hardware Receptor (Target Hardware Technical Dossier):** Durante la búsqueda o levantamiento de información técnica del componente objetivo (datasheets, manuales de servicio, planos dimensionales o cotas de calibre), el agente **DEBE registrar obligatoriamente en el artefacto `pieces/<pieza>/README.md`** la información técnica relevante recopilada:
+      - Fabricante, modelo exacto y enlaces o referencias a datasheets oficiales.
+      - Cotas críticas de acople mecánico (diámetros de eje, ranuras de chaveta, distancia entre centros, profundidades, roscas).
+      - Condiciones ambientales y operativas (rango de temperatura admisible, par/torque nominal o máximo, vibraciones continuas, voltajes, envolvente NEMA/IP).
+      - Justificación técnica directa de cómo estos datos determinan las decisiones de modelado CAD (fórmulas paramétricas con `$slop`) y de laminación FDM (selección de filamento por temperatura de transición vítrea $T_g$, bucles de pared por esfuerzo cortante/torsional y compensaciones de agujero `xy_hole_compensation`).
 
 ---
 

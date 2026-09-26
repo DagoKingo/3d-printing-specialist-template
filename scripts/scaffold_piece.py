@@ -113,6 +113,19 @@ if (RENDER == "preview" || RENDER == "cuerpo") {{
 
 ---
 
+## 🔬 Ficha Técnica del Hardware Receptor (Target Hardware Dossier)
+<!-- Documentar cotas oficiales durante spec-advisor (datasheets, manuales de servicio o calibre) -->
+| Parámetro | Especificación de Fabricante / Datasheet | Implicación en Diseño CAD y Laminado FDM |
+| :--- | :--- | :--- |
+| **Componente Receptor** | {target_device if target_device else "Definir componente comercial / máquina"} | Contexto de aplicación y montaje |
+| **Número de Parte Exacto** | {target_device if target_device else "N/A"} | No truncar; referencia unívoca |
+| **Interfaz Mecánica / Eje** | Pendiente (e.g. Diámetro eje, chaveta, rosca) | Cota nominal y holguras en CAD |
+| **Carga / Torque Operativo** | Pendiente (e.g. Par nominal, esfuerzo cortante) | Espesor de paredes y bucles de perímetro |
+| **Rango de Temperatura** | Pendiente (e.g. -20°C a +70°C) | Criterio de selección de material (Tg) |
+| **Fuente / Datasheet** | [Añadir URL o archivo técnico en references/] | Trazabilidad documental auditable |
+
+---
+
 ## 📦 Artefactos de la Pieza
 
 | Artefacto | Descripción | Estado |

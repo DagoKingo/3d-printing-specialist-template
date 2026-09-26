@@ -63,9 +63,10 @@ Haz las preguntas de manera conversacional, agrupadas por lógica, sin abrumar c
   - ¿Tornillos métricos (M3/M4/M5) con tuerca o insertos roscados de calor (heat-set inserts)?
   - ¿A presión (press-fit) o corredera (sliding-fit)?
 
-### 4. Dimensiones Críticas y Restricciones Físicas
+### 4. Dimensiones Críticas y Restricciones Físicas (Target Hardware Specs)
 - ¿Cuáles son las medidas exactas del objeto que debe alojar? *(Nunca asumas grosores ni holguras).*
 - ¿Existen restricciones de espacio o interferencias alrededor?
+- **Levantamiento de Datasheet:** Si el objeto es un componente comercial o industrial con número de parte (e.g. `Honeywell Slate R8001M1150`), consulta su datasheet oficial o planos mecánicos para extraer cotas de eje, ranuras de chaveta, torque y temperatura de trabajo, registrándolos en la ficha técnica de la pieza.
 
 ### 5. Estética vs. Resistencia vs. Velocidad
 - ¿El acabado visual y la ausencia de costuras son prioritarios, o la resistencia mecánica prima sobre la apariencia?

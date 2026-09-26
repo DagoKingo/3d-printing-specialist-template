@@ -101,3 +101,31 @@ Si el diseño parte de un modelo `.stl` o `.3mf` existente o muestra:
   python3 scripts/measure.py orient modelo.stl --level 45.0 --write nivelado.stl
   ```
 
+---
+
+## 📋 Protocolo de Captura y Registro de Especificaciones Técnicas (Target Hardware Dossier)
+
+> [!IMPORTANT]
+> **Prohibido dejar los datos técnicos aislados en el chat:** Cuando investigues datasheets de fabricantes, manuales de servicio o midas con calibre/`measure.py`, **DEBES volcar obligatoriamente toda la información técnica relevante en el artefacto `pieces/<nombre_pieza>/README.md`**. Esta ficha técnica es el documento vivo que guía tanto el código CAD como los parámetros de corte.
+
+### Estructura Mandatoria a Insertar en `pieces/<nombre_pieza>/README.md`:
+
+```markdown
+## 🔬 Ficha Técnica del Hardware Receptor (Target Hardware Dossier)
+
+| Parámetro / Característica | Especificación Oficial / Medición | Implicación en Diseño CAD y Laminado FDM |
+| :--- | :--- | :--- |
+| **Componente Receptor** | [e.g. Actuador Modulante de Quemador] | Contexto de aplicación industrial/comercial |
+| **Fabricante / Serie** | [e.g. Honeywell Thermal Solutions / SLATE] | Familia de equipos y arquitectura de montaje |
+| **Número de Parte Exacto** | [e.g. R8001M1150 (Nunca truncar)] | Identificador unívoco de variante y torque |
+| **Interfaz Mecánica / Eje** | [e.g. Eje de 1/2" (12.70 mm) con chaveta 1/8" (3.18 mm)] | Cota nominal en OpenSCAD (`ANCHO_EJE = 12.70`) |
+| **Tolerancia / Ajuste Requerido**| [e.g. Ajuste deslizante firme con chaveta] | Compensación diametral (`xy_hole_compensation = +0.15 mm`) |
+| **Torque / Carga Mecánica** | [e.g. 150 in-lb (17 N·m)] | Buje sólido de 6 bucles de pared (sin infill hueco) |
+| **Rango de Temperatura** | [e.g. -28°C a 70°C (-18°F a 158°F)] | Descarte de PLA (Tg 55°C); obligatorio PETG (Tg 75°C) o ASA |
+| **Ciclo y Carrera de Giro** | [e.g. 90° en 30 s (450 pasos)] | Rango angular de aguja/indicador (0° a 90°) |
+| **Ambiente y Protección** | [e.g. NEMA 1, vibración continua de soplador] | Tenacidad a fatiga interlaminar requerida |
+| **Fuente / Datasheet** | [URL oficial o archivo en `references/`] | Enlace de referencia técnica auditable |
+```
+
+Este registro garantiza que si otro agente, el usuario o tú mismo retoman la pieza semanas después, no se pierdan las cotas de ingeniería ni se repitan búsquedas en internet.
+
