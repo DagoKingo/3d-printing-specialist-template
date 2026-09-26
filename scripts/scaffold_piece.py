@@ -95,6 +95,17 @@ if (RENDER == "preview" || RENDER == "cuerpo") {{
 
 ---
 
+## 📋 Registro de Decisiones de Diseño (Design Rationale)
+<!-- Acordado durante la entrevista de requerimientos (skills/3d-grill-me) -->
+- **Estrategia:** {"Greenfield (Desde cero)" if template == "starter" else "Remix & Adaptación"}
+- **Pieza base / muestra:** {"Ninguna" if template == "starter" else "Pieza STL/STEP previa"}
+- **Rasgos a conservar:** {"N/A" if template == "starter" else "Interfaces de acople, patrón de tornillos"}
+- **Modificaciones:** {"Diseño funcional inicial" if template == "starter" else "Refuerzos, nueva montura"}
+- **Orientación de capas y esfuerzos:** {"Carga en plano XY / Capas orientadas para máxima resistencia mecánica"}
+- **Método de fijación:** {"Tornillos M3 con insertos térmicos / agujeros pasantes"}
+
+---
+
 ## 📦 Artefactos de la Pieza
 
 | Artefacto | Descripción | Estado |

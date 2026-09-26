@@ -80,12 +80,14 @@ Haz las preguntas de manera conversacional, agrupadas por lógica, sin abrumar c
 
 ---
 
-## 🏁 Cierre de la Entrevista y Transición
+## 🏁 Cierre de la Entrevista y Persistencia (Grill to Piece Spec)
 
-Solo cuando todas las respuestas críticas hayan sido clarificadas, genera un **Resumen de Especificaciones de Diseño (Design Brief)** con la siguiente estructura:
+Para evitar la **pérdida de contexto** (que las decisiones se pierdan al cerrar o truncarse el chat), el agente **NUNCA** deja las conclusiones flotando solo en la conversación. Sigue este procedimiento estricto:
 
+### 1. Presentar el Resumen de Especificaciones (Design Brief) al Usuario:
 ```markdown
 ### 📋 Resumen de Especificaciones (Design Brief)
+- **Nombre de la pieza:** [nombre_pieza]
 - **Tipo de proyecto:** [Greenfield / Remix & Adaptación]
 - **Pieza base (si aplica):** [Nombre del archivo o referencia]
 - **Rasgos a conservar:** [Lista de geometrías inalterables]
@@ -93,10 +95,20 @@ Solo cuando todas las respuestas críticas hayan sido clarificadas, genera un **
 - **Ruta de modelado elegida:** [OpenSCAD (Técnico/Mecánico) / BlenderMCP (Orgánico)]
 - **Material seleccionado:** [PLA / PETG / ABS / ASA / TPU / PA-CF]
 - **Fuerzas y Cargas:** [Magnitud y dirección]
-- **Orientación de impresión prevista:** [Plano X-Y en la cama de la Centauri]
+- **Orientación de capas prevista:** [Plano de mayor resistencia en la Centauri]
 - **Fijaciones:** [e.g. 2x M3 insertos térmicos, tornillo M4 avellanado]
-- **Tolerancias asignadas:** [e.g. +0.2 mm para holgura deslizante]
+- **Tolerancias asignadas:** [e.g. $slop = 0.2 mm]
 - **Probeta de prueba previa:** [Sí / No requerida]
 ```
 
-Una vez validado el resumen con el usuario, avanza inmediatamente a `skills/spec-advisor`, `skills/parametric-cad` o `skills/blender-mcp`.
+### 2. Persistir Obligatoriamente en el Repositorio (`pieces/<nombre_pieza>/README.md`):
+Una vez que el usuario dé el visto bueno al resumen:
+1. **Inicializar la pieza si no existe:**
+   ```bash
+   python3 scripts/scaffold_piece.py <nombre_pieza> --material <MATERIAL> --desc "<DESCRIPCION>"
+   ```
+2. **Volcar el Design Rationale:** Escribir o actualizar el bloque `## 📋 Registro de Decisiones de Diseño (Design Rationale)` en `pieces/<nombre_pieza>/README.md`.
+3. Esto garantiza un rastro técnico auditable (*paper trail*) permanente que acompaña al código CAD, a la malla STL y al manifest de la pieza durante todo su ciclo de vida.
+
+Una vez persistido, avanza inmediatamente a `skills/spec-advisor`, `skills/parametric-cad` o `skills/blender-mcp`.
+
