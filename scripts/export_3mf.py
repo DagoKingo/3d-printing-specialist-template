@@ -33,12 +33,12 @@ import zipfile
 
 # Materiales y perfiles reconocidos
 DEFAULT_MATERIALS = {
-    "PETG":   {"color": "#1A1A1A", "type": "PETG",  "id": "Generic PETG @System", "density": "1.27"},
-    "PLA":    {"color": "#E0E0E0", "type": "PLA",   "id": "Elegoo PLA @ECC2",      "density": "1.24"},
-    "ABS":    {"color": "#303030", "type": "ABS",   "id": "Generic ABS @Elegoo Centauri", "density": "1.04"},
-    "ASA":    {"color": "#A0A0A0", "type": "ASA",   "id": "Generic ASA @System",   "density": "1.07"},
-    "TPU":    {"color": "#FF8C00", "type": "TPU",   "id": "Generic TPU @System",   "density": "1.21"},
-    "PA-CF":  {"color": "#1A1A1A", "type": "PA-CF", "id": "Generic PA-CF @System", "density": "1.20"}
+    "PETG":   {"color": "#1A1A1A", "type": "PETG",  "id": "Generic PETG @System", "density": "1.27", "nozzle_temp": "240", "nozzle_temp_initial": "245", "bed_temp": "80", "bed_temp_initial": "85"},
+    "PLA":    {"color": "#E0E0E0", "type": "PLA",   "id": "Elegoo PLA @ECC2",      "density": "1.24", "nozzle_temp": "210", "nozzle_temp_initial": "215", "bed_temp": "55", "bed_temp_initial": "60"},
+    "ABS":    {"color": "#808080", "type": "ABS",   "id": "Generic ABS @Elegoo Centauri", "density": "1.04", "nozzle_temp": "260", "nozzle_temp_initial": "260", "bed_temp": "100", "bed_temp_initial": "105"},
+    "ASA":    {"color": "#A0A0A0", "type": "ASA",   "id": "Generic ASA @System",   "density": "1.07", "nozzle_temp": "260", "nozzle_temp_initial": "260", "bed_temp": "100", "bed_temp_initial": "105"},
+    "TPU":    {"color": "#FF8C00", "type": "TPU",   "id": "Generic TPU @System",   "density": "1.21", "nozzle_temp": "230", "nozzle_temp_initial": "230", "bed_temp": "45", "bed_temp_initial": "50"},
+    "PA-CF":  {"color": "#1A1A1A", "type": "PA-CF", "id": "Generic PA-CF @System", "density": "1.20", "nozzle_temp": "280", "nozzle_temp_initial": "285", "bed_temp": "100", "bed_temp_initial": "105"}
 }
 
 INTENT_PRESETS = {
@@ -191,10 +191,18 @@ def package_elegoo_3mf(stl_path, output_path, intent="mechanical", material="PET
     if overrides:
         intent_settings.update(overrides)
 
-    # Optimización anti-fusión térmica para soportes en PETG
+    # Optimización anti-fusión térmica para soportes según material
     if mat_key == "PETG" and intent_settings.get("enable_support") == "1":
         intent_settings.setdefault("support_top_z_distance", "0.26")
         intent_settings.setdefault("support_bottom_z_distance", "0.26")
+        intent_settings.setdefault("support_object_xy_distance", "0.5")
+        intent_settings.setdefault("support_interface_top_layers", "1")
+        intent_settings.setdefault("support_interface_spacing", "1.0")
+        intent_settings.setdefault("support_style", "tree_slim")
+        intent_settings.setdefault("tree_support_tip_diameter", "0.6")
+    elif mat_key in ("ABS", "ASA") and intent_settings.get("enable_support") == "1":
+        intent_settings.setdefault("support_top_z_distance", "0.22")
+        intent_settings.setdefault("support_bottom_z_distance", "0.22")
         intent_settings.setdefault("support_object_xy_distance", "0.5")
         intent_settings.setdefault("support_interface_top_layers", "1")
         intent_settings.setdefault("support_interface_spacing", "1.0")
@@ -204,13 +212,6 @@ def package_elegoo_3mf(stl_path, output_path, intent="mechanical", material="PET
     # REGLA CRÍTICA 1: TODOS LOS VALORES ESCALARES DEBEN SER STRINGS
     for k, v in intent_settings.items():
         cfg[k] = str(v)
-
-    # REGLA CRÍTICA 2: REGISTRAR TODAS LAS MODIFICACIONES EN different_settings_to_system
-    diff_keys = list(intent_settings.keys())
-    cfg["different_settings_to_system"] = [
-        ";".join(diff_keys),
-        "", "", ""
-    ]
 
     # REGLA CRÍTICA 3: VINCULAR A PRESET BASE DEL SISTEMA
     cfg["printer_settings_id"] = "Elegoo Centauri Carbon 2 0.4 nozzle"
@@ -234,6 +235,26 @@ def package_elegoo_3mf(stl_path, output_path, intent="mechanical", material="PET
     cfg["filament_cost"] = ["30"]
     cfg["filament_flow_ratio"] = ["1"]
     cfg["default_filament_colour"] = [hex_color]
+
+    filament_diffs = ["filament_colour"]
+    if "nozzle_temp" in mat_data:
+        cfg["nozzle_temperature"] = [mat_data["nozzle_temp"]]
+        cfg["nozzle_temperature_initial_layer"] = [mat_data.get("nozzle_temp_initial", mat_data["nozzle_temp"])]
+        filament_diffs.extend(["nozzle_temperature", "nozzle_temperature_initial_layer"])
+    if "bed_temp" in mat_data:
+        cfg["textured_plate_temp"] = [mat_data["bed_temp"]]
+        cfg["textured_plate_temp_initial_layer"] = [mat_data.get("bed_temp_initial", mat_data["bed_temp"])]
+        cfg["hot_plate_temp"] = [mat_data["bed_temp"]]
+        cfg["hot_plate_temp_initial_layer"] = [mat_data.get("bed_temp_initial", mat_data["bed_temp"])]
+        filament_diffs.extend(["textured_plate_temp", "textured_plate_temp_initial_layer", "hot_plate_temp", "hot_plate_temp_initial_layer"])
+
+    # REGLA CRÍTICA 2: REGISTRAR TODAS LAS MODIFICACIONES EN different_settings_to_system
+    diff_keys = list(intent_settings.keys())
+    cfg["different_settings_to_system"] = [
+        ";".join(diff_keys),
+        ";".join(filament_diffs),
+        "", ""
+    ]
 
     # 3. Construir XMLs de estructura 3MF
     content_types = (
