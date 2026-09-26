@@ -88,16 +88,18 @@ Para evitar la **pérdida de contexto** (que las decisiones se pierdan al cerrar
 ```markdown
 ### 📋 Resumen de Especificaciones (Design Brief)
 - **Nombre de la pieza:** [nombre_pieza]
+- **Dispositivo Receptor / Hardware Exacto (Target Hardware):** [e.g. Honeywell Slate R8001M1150 — NUNCA truncar números de parte o sufijos de modelo]
 - **Tipo de proyecto:** [Greenfield / Remix & Adaptación]
 - **Pieza base (si aplica):** [Nombre del archivo o referencia]
 - **Rasgos a conservar:** [Lista de geometrías inalterables]
 - **Modificaciones requeridas:** [Lista de cambios]
+- **Problema previo / Modo de falla reportado:** [e.g. Ruptura por estrías huecas con infill bajo]
 - **Ruta de modelado elegida:** [OpenSCAD (Técnico/Mecánico) / BlenderMCP (Orgánico)]
 - **Material seleccionado:** [PLA / PETG / ABS / ASA / TPU / PA-CF]
 - **Fuerzas y Cargas:** [Magnitud y dirección]
 - **Orientación de capas prevista:** [Plano de mayor resistencia en la Centauri]
 - **Fijaciones:** [e.g. 2x M3 insertos térmicos, tornillo M4 avellanado]
-- **Tolerancias asignadas:** [e.g. $slop = 0.2 mm]
+- **Tolerancias asignadas:** [e.g. $slop = 0.2 mm, xy_hole_compensation = +0.15 mm]
 - **Probeta de prueba previa:** [Sí / No requerida]
 ```
 
@@ -105,10 +107,11 @@ Para evitar la **pérdida de contexto** (que las decisiones se pierdan al cerrar
 Una vez que el usuario dé el visto bueno al resumen:
 1. **Inicializar la pieza si no existe:**
    ```bash
-   python3 scripts/scaffold_piece.py <nombre_pieza> --material <MATERIAL> --desc "<DESCRIPCION>"
+   python3 scripts/scaffold_piece.py <nombre_pieza> --material <MATERIAL> --desc "<DESCRIPCION>" --target-device "<HARDWARE_EXACTO>"
    ```
-2. **Volcar el Design Rationale:** Escribir o actualizar el bloque `## 📋 Registro de Decisiones de Diseño (Design Rationale)` en `pieces/<nombre_pieza>/README.md`.
-3. Esto garantiza un rastro técnico auditable (*paper trail*) permanente que acompaña al código CAD, a la malla STL y al manifest de la pieza durante todo su ciclo de vida.
+2. **Volcar el Design Rationale:** Escribir o actualizar el bloque `## 📋 Registro de Requerimientos y Decisiones (Design Rationale)` en `pieces/<nombre_pieza>/README.md`, dejando explícito el hardware receptor exacto, el problema previo que motiva el diseño y las soluciones adoptadas.
+3. **Fijar en el Manifest:** Al auditar la malla con `scripts/verify_mesh.py`, pasar `--target-device "<HARDWARE_EXACTO>"` para certificar el hardware en `manifest.json`.
+4. Esto garantiza un rastro técnico auditable (*paper trail*) permanente que acompaña al código CAD, a la malla STL y al manifest de la pieza durante todo su ciclo de vida, protegiendo contra pérdidas de memoria en chats o resúmenes de contexto.
 
 Una vez persistido, avanza inmediatamente a `skills/spec-advisor`, `skills/parametric-cad` o `skills/blender-mcp`.
 

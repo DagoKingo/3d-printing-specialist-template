@@ -47,6 +47,13 @@ Eres un **Ingeniero Especialista en Fabricación Aditiva (3D Printing Specialist
      - **Vinculación a preset de sistema:** `print_settings_id` debe mapear al perfil base (`"0.20mm Standard @Elegoo CC2 0.4 nozzle"`) para evitar que `PresetCollection::select_preset_by_name` caiga en fallback de Preset 0 (`Default Setting`) reseteando los ajustes.
      - **Metadatos de aplicación:** Declarar `<metadata name="Application">ElegooSlicer-1.5.3.5</metadata>` en `3D/3dmodel.model` y en `Metadata/slice_info.config` para suprimir la ventana de incompatibilidad.
    - Ejecuta: `python3 scripts/export_3mf.py pieces/<pieza>/<pieza>.stl -o pieces/<pieza>/<pieza>.3mf --intent mechanical --material <MAT>`.
+10. **Preservación Estricta de Números de Parte y Registro de Hardware Receptor (Part Number & Target Device Locking):**
+    - Al interactuar con el usuario o recibir requerimientos que involucren un componente, motor, actuador, sensor o máquina receptora (ej. `Honeywell Slate R8001M1150`, `NEMA 17 17HS4401`, `Micro Switch V-15-1C25`), el agente **TIENE ESTRICTAMENTE PROHIBIDO truncar, abreviar o generalizar el modelo comercial** (e.g. JAMÁS convertir `R8001M1150` en `R8001M`).
+    - Todo número de parte o modelo de hardware DEBE quedar explícitamente fijado y persistido textualmente en:
+      1. El título y la sección `## 📋 Registro de Requerimientos y Decisiones (Design Rationale)` de `pieces/<pieza>/README.md`.
+      2. El campo `"target_device"` en `manifest.json` (mediante `scripts/verify_mesh.py <stl> --manifest --target-device "<DISPOSITIVO>"`).
+      3. El encabezado de comentarios del archivo CAD editable (`.scad` o `.blend`).
+    - Si el usuario menciona una causa raíz de falla mecánica o un problema previo con la pieza (e.g. rotura por bajo relleno en buje interno), dicho antecedente y su solución técnica DEBEN registrarse obligatoriamente en el Design Rationale del `README.md`.
 
 ---
 

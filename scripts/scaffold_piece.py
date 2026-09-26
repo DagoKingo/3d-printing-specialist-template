@@ -15,7 +15,7 @@ def sanitize_name(name):
     clean = re.sub(r'_+', '_', clean)
     return clean.strip('_')
 
-def scaffold_piece(piece_name, template="starter", material="PLA", description=""):
+def scaffold_piece(piece_name, template="starter", material="PLA", description="", target_device=""):
     root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     clean_name = sanitize_name(piece_name)
     piece_dir = os.path.join(root_dir, "pieces", clean_name)
@@ -31,9 +31,10 @@ def scaffold_piece(piece_name, template="starter", material="PLA", description="
 
     # 1. Crear el archivo CAD paramétrico inicial
     scad_path = os.path.join(piece_dir, f"{clean_name}.scad")
+    device_line = f"// Dispositivo Receptor: {target_device}\n" if target_device else ""
     scad_content = f"""// =====================================================================
 // Pieza: {clean_name}
-// Material previsto: {material}
+{device_line}// Material previsto: {material}
 // Máquina: Elegoo Centauri Carbon (CoreXY, 256x256x256 mm)
 // =====================================================================
 
@@ -80,6 +81,10 @@ if (RENDER == "preview" || RENDER == "cuerpo") {{
 
     # 2. Crear ficha técnica README.md
     readme_path = os.path.join(piece_dir, "README.md")
+    verify_cmd = f"python3 scripts/verify_mesh.py pieces/{clean_name}/{clean_name}.stl --manifest --material {material}"
+    if target_device:
+        verify_cmd += f' --target-device "{target_device}"'
+
     readme_content = f"""# Pieza: {clean_name}
 
 {description if description else "Pieza diseñada para fabricación aditiva FDM en Elegoo Centauri Carbon."}
@@ -95,12 +100,14 @@ if (RENDER == "preview" || RENDER == "cuerpo") {{
 
 ---
 
-## 📋 Registro de Decisiones de Diseño (Design Rationale)
+## 📋 Registro de Requerimientos y Decisiones (Design Rationale)
 <!-- Acordado durante la entrevista de requerimientos (skills/3d-grill-me) -->
+- **Dispositivo Receptor (Target Hardware):** {target_device if target_device else "N/A (Greenfield / Genérico)"}
 - **Estrategia:** {"Greenfield (Desde cero)" if template == "starter" else "Remix & Adaptación"}
 - **Pieza base / muestra:** {"Ninguna" if template == "starter" else "Pieza STL/STEP previa"}
 - **Rasgos a conservar:** {"N/A" if template == "starter" else "Interfaces de acople, patrón de tornillos"}
 - **Modificaciones:** {"Diseño funcional inicial" if template == "starter" else "Refuerzos, nueva montura"}
+- **Problema previo / Antecedente:** {"N/A" if template == "starter" else "Describir si la pieza previa se rompió o falló y por qué"}
 - **Orientación de capas y esfuerzos:** {"Carga en plano XY / Capas orientadas para máxima resistencia mecánica"}
 - **Método de fijación:** {"Tornillos M3 con insertos térmicos / agujeros pasantes"}
 
@@ -126,7 +133,7 @@ if (RENDER == "preview" || RENDER == "cuerpo") {{
 openscad -D 'RENDER="cuerpo"' -o pieces/{clean_name}/{clean_name}.stl pieces/{clean_name}/{clean_name}.scad
 
 # 2. Auditar imprimibilidad y generar manifest.json
-python3 scripts/verify_mesh.py pieces/{clean_name}/{clean_name}.stl --manifest --material {material}
+{verify_cmd}
 
 # 3. Generar visor Three.js y vistas previas PNG
 python3 scripts/generate_gallery.py pieces/{clean_name}/{clean_name}.scad
@@ -150,10 +157,11 @@ def main():
     parser.add_argument("name", help="Nombre descriptivo de la pieza (ej. soporte_sensor_btt, clip_cable_2020)")
     parser.add_argument("--material", default="PLA", choices=["PLA", "PETG", "ABS", "ASA", "TPU", "PA-CF"], help="Material objetivo")
     parser.add_argument("--desc", default="", help="Breve descripción del propósito de la pieza")
+    parser.add_argument("--target-device", default="", help="Nombre y modelo exacto del dispositivo o máquina receptora (ej. 'Honeywell Slate R8001M1150')")
     parser.add_argument("--template", default="starter", choices=["starter", "remix"], help="Plantilla base CAD")
 
     args = parser.parse_args()
-    scaffold_piece(args.name, template=args.template, material=args.material, description=args.desc)
+    scaffold_piece(args.name, template=args.template, material=args.material, description=args.desc, target_device=args.target_device)
 
 if __name__ == "__main__":
     main()

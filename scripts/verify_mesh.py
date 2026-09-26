@@ -202,7 +202,7 @@ def run_stl_autopsy(filepath):
 
     return autopsy
 
-def evaluate_mesh(filepath, generate_manifest=False, project_dir=None, material="PLA", run_autopsy=False):
+def evaluate_mesh(filepath, generate_manifest=False, project_dir=None, material="PLA", run_autopsy=False, target_device=None):
     if not os.path.exists(filepath):
         print(f"❌ Error: El archivo '{filepath}' no existe.")
         return False, {}
@@ -210,6 +210,8 @@ def evaluate_mesh(filepath, generate_manifest=False, project_dir=None, material=
     print(f"\n=======================================================")
     print(f"🛡️  PUERTA DE IMPRIMIBILIDAD (PRINTABILITY GATE) FDM")
     print(f"    Archivo: {os.path.basename(filepath)}")
+    if target_device:
+        print(f"    Dispositivo Objetivo: {target_device}")
     print(f"=======================================================")
 
     file_sha = compute_sha256(filepath)
@@ -319,9 +321,27 @@ def evaluate_mesh(filepath, generate_manifest=False, project_dir=None, material=
     print(f"\n🏁 RESULTADO FINAL: [{gate_status}]")
     print("=======================================================\n")
 
+    # Preservar o resolver target_device si existe manifest previo
+    target_dir = project_dir or os.path.dirname(filepath)
+    manifest_path = os.path.join(target_dir, "manifest.json")
+    resolved_target_device = target_device
+    if resolved_target_device is None and os.path.exists(manifest_path):
+        try:
+            with open(manifest_path, "r", encoding="utf-8") as f:
+                old_data = json.load(f)
+                if old_data.get("target_device"):
+                    resolved_target_device = old_data["target_device"]
+        except Exception:
+            pass
+
     report_data = {
         "timestamp": time.strftime("%Y-%m-%d %H:%M:%S"),
         "file": os.path.basename(filepath),
+    }
+    if resolved_target_device:
+        report_data["target_device"] = resolved_target_device
+
+    report_data.update({
         "sha256": file_sha,
         "gate_status": gate_status,
         "is_watertight": is_watertight,
@@ -333,11 +353,9 @@ def evaluate_mesh(filepath, generate_manifest=False, project_dir=None, material=
         "estimated_weight_grams": round(estimated_weight_g, 1),
         "warnings": warnings,
         "autopsy": autopsy_result
-    }
+    })
 
     if generate_manifest or project_dir:
-        target_dir = project_dir or os.path.dirname(filepath)
-        manifest_path = os.path.join(target_dir, "manifest.json")
         try:
             with open(manifest_path, "w", encoding="utf-8") as f:
                 json.dump(report_data, f, indent=2, ensure_ascii=False)
@@ -352,6 +370,7 @@ def main():
     parser.add_argument("stl_file", help="Ruta al archivo STL")
     parser.add_argument("--manifest", action="store_true", help="Generar/actualizar manifest.json en el directorio del proyecto")
     parser.add_argument("--material", default="PLA", choices=["PLA", "PETG", "ABS", "ASA", "TPU", "PA-CF"], help="Material para estimar peso")
+    parser.add_argument("--target-device", default=None, help="Nombre y modelo exacto del dispositivo/máquina receptora (ej. 'Honeywell Slate R8001M1150')")
     parser.add_argument("--ground", action="store_true", help="Alinear la base del modelo exactamente en Z=0")
     parser.add_argument("--rotate-y-up", action="store_true", help="Rotar modelo de coordenadas Y-up a Z-up")
     parser.add_argument("--autopsy", action="store_true", help="Forzar ejecución de autopsia de defectos y análisis de barreno")
@@ -365,6 +384,7 @@ def main():
         args.stl_file,
         generate_manifest=args.manifest,
         material=args.material,
+        target_device=args.target_device,
         run_autopsy=args.autopsy
     )
     sys.exit(0 if passed else 1)
