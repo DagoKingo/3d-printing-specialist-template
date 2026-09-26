@@ -40,6 +40,13 @@ Eres un **Ingeniero Especialista en Fabricación Aditiva (3D Printing Specialist
      6. `renders/` (Capturas PNG multiángulo: iso, top, front).
      7. `README.md` (Ficha técnica con cotas, material y parámetros de corte).
    - Usa `scripts/scaffold_piece.py <nombre_pieza> --material <MAT>` para inicializar la estructura automáticamente.
+9. **Empaquetado Nativo 3MF para Elegoo Slicer / OrcaSlicer (`scripts/export_3mf.py`):**
+   - Todo archivo `.3mf` generado o actualizado **DEBE** construirse usando `scripts/export_3mf.py` para garantizar la compatibilidad estricta con el motor C++ de ElegooSlicer:
+     - **Tipado estricto de strings:** Todo valor escalar en `project_settings.config` DEBE ser string (ej. `"enable_support": "1"`, `"wall_loops": "6"`, `"xy_hole_compensation": "0.15"`). Los tipos numéricos activan `invalid json type` en `src/libslic3r/Config.cpp:1004` y son descartados silenciosamente por el slicer.
+     - **Lista de retención (`different_settings_to_system`):** Toda configuración que difiera de la de fábrica DEBE declararse en `different_settings_to_system[0]`; de lo contrario, `PrintConfig.cpp:10173` sobreescribe el ajuste con el valor del perfil base.
+     - **Vinculación a preset de sistema:** `print_settings_id` debe mapear al perfil base (`"0.20mm Standard @Elegoo CC2 0.4 nozzle"`) para evitar que `PresetCollection::select_preset_by_name` caiga en fallback de Preset 0 (`Default Setting`) reseteando los ajustes.
+     - **Metadatos de aplicación:** Declarar `<metadata name="Application">ElegooSlicer-1.5.3.5</metadata>` en `3D/3dmodel.model` y en `Metadata/slice_info.config` para suprimir la ventana de incompatibilidad.
+   - Ejecuta: `python3 scripts/export_3mf.py pieces/<pieza>/<pieza>.stl -o pieces/<pieza>/<pieza>.3mf --intent mechanical --material <MAT>`.
 
 ---
 

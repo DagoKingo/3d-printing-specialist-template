@@ -1,40 +1,96 @@
 #!/usr/bin/env python3
 """
-export_3mf.py — Empaquetador multi-pieza STL a 3MF con asignación de materiales y colores
-Inspirado en 'VibePrint3D' (Circus-Systems).
+export_3mf.py — Empaquetador nativo de proyectos 3MF para Elegoo Slicer / OrcaSlicer (Elegoo Centauri Carbon)
 
-Permite empaquetar múltiples archivos STL en un único archivo .3mf manteniendo las posiciones relativas
-y asignando materiales/colores para OrcaSlicer, Elegoo Slicer, Bambu Studio o PrusaSlicer.
+Convierte archivos STL en proyectos .3mf completamente configurados, posicionados en la cama (Z-up, Z=0,
+centrados en X=128, Y=128), con metadatos nativos para evitar diálogos de incompatibilidad y con parámetros
+de corte (paredes, relleno, soportes, filamentos, tolerancias) precargados por defecto.
+
+REGLAS DE ORO DEL MOTOR C++ DE ELEGOOSLICER:
+1. Todos los valores escalares en project_settings.config DEBEN ser strings ("1", "6", "0.15").
+   Los números puros (int/float) provocan "invalid json type" y son descartados silenciosamente.
+2. Todo parámetro modificado DEBE listarse en different_settings_to_system[0]. De lo contrario,
+   ElegooSlicer lo sobreescribe con el valor del perfil base de fábrica.
+3. print_settings_id debe vincularse a un preset de sistema válido (ej. "0.20mm Standard @Elegoo CC2 0.4 nozzle")
+   para evitar el fallback a Preset 0 ("Default Setting").
+4. 3D/3dmodel.model y slice_info.config deben declarar ElegooSlicer-1.5.3.5 para evitar la ventana
+   "The 3MF file you are importing may be incompatible".
 
 Uso:
-    python3 scripts/export_3mf.py base.stl:PETG tapa.stl:PETG junta.stl:TPU -o ensamble.3mf --title "Carcasa IP67"
+    # Perfil mecánico reforzado (6 paredes, 40% giroide, árbol auto, +0.15 mm compensación):
+    python3 scripts/export_3mf.py pieces/aguja_slate_r8001m/aguja_slate_r8001m.stl -o aguja.3mf --intent mechanical --material PETG
+
+    # Personalizado:
+    python3 scripts/export_3mf.py pieza.stl -o proyecto.3mf --material PLA --support --walls 4 --infill 30%
 """
 
 import sys
 import os
+import json
 import struct
 import argparse
 import zipfile
-import xml.etree.ElementTree as ET
 
+# Materiales y perfiles reconocidos
 DEFAULT_MATERIALS = {
-    "PETG":   {"color": "#646464FF", "desc": "Gris Oscuro - Estructural"},
-    "TPU":    {"color": "#FF8C00FF", "desc": "Naranja - Flexible / Juntas"},
-    "PLA":    {"color": "#E0E0E0FF", "desc": "Blanco - Prototipos"},
-    "ASA":    {"color": "#A0A0A0FF", "desc": "Gris Claro - Intemperie / UV"},
-    "ABS":    {"color": "#303030FF", "desc": "Negro - Temperatura"},
-    "PA-CF":  {"color": "#1A1A1AFF", "desc": "Negro Carbón - Alto Rendimiento"},
-    "NYLON":  {"color": "#E8DCC8FF", "desc": "Crema - Desgaste y Resistencia"}
+    "PETG":   {"color": "#1A1A1A", "type": "PETG",  "id": "Generic PETG @System", "density": "1.27"},
+    "PLA":    {"color": "#E0E0E0", "type": "PLA",   "id": "Elegoo PLA @ECC2",      "density": "1.24"},
+    "ABS":    {"color": "#303030", "type": "ABS",   "id": "Generic ABS @Elegoo Centauri", "density": "1.04"},
+    "ASA":    {"color": "#A0A0A0", "type": "ASA",   "id": "Generic ASA @System",   "density": "1.07"},
+    "TPU":    {"color": "#FF8C00", "type": "TPU",   "id": "Generic TPU @System",   "density": "1.21"},
+    "PA-CF":  {"color": "#1A1A1A", "type": "PA-CF", "id": "Generic PA-CF @System", "density": "1.20"}
+}
+
+INTENT_PRESETS = {
+    "mechanical": {
+        "wall_loops": "6",
+        "sparse_infill_density": "40%",
+        "sparse_infill_pattern": "gyroid",
+        "enable_support": "1",
+        "support_type": "tree(auto)",
+        "xy_hole_compensation": "0.15",
+        "bottom_shell_layers": "5",
+        "top_shell_layers": "5"
+    },
+    "standard": {
+        "wall_loops": "3",
+        "sparse_infill_density": "15%",
+        "sparse_infill_pattern": "rectilinear",
+        "enable_support": "0",
+        "support_type": "tree(auto)",
+        "xy_hole_compensation": "0",
+        "bottom_shell_layers": "3",
+        "top_shell_layers": "4"
+    },
+    "fast": {
+        "wall_loops": "2",
+        "sparse_infill_density": "10%",
+        "sparse_infill_pattern": "lightning",
+        "enable_support": "0",
+        "support_type": "tree(auto)",
+        "xy_hole_compensation": "0",
+        "bottom_shell_layers": "3",
+        "top_shell_layers": "3"
+    },
+    "aesthetic": {
+        "wall_loops": "3",
+        "sparse_infill_density": "20%",
+        "sparse_infill_pattern": "gyroid",
+        "enable_support": "1",
+        "support_type": "tree(auto)",
+        "xy_hole_compensation": "0",
+        "bottom_shell_layers": "4",
+        "top_shell_layers": "5"
+    }
 }
 
 def parse_stl(filepath):
-    """Lee un archivo STL (binario o ASCII) y retorna (vertices, triangles)."""
+    """Lee un archivo STL y devuelve vértices únicos y triángulos indexados."""
     vertices = []
     triangles = []
     vert_map = {}
 
     def get_vert_idx(x, y, z):
-        # Redondeo para deduplicación de vértices compartidos
         key = (round(x, 4), round(y, 4), round(z, 4))
         if key in vert_map:
             return vert_map[key]
@@ -45,7 +101,6 @@ def parse_stl(filepath):
 
     with open(filepath, "rb") as f:
         header = f.read(80)
-        # Comprobar si parece binario
         f.seek(0, os.SEEK_END)
         file_size = f.tell()
         f.seek(80)
@@ -61,18 +116,17 @@ def parse_stl(filepath):
         if is_binary:
             f.seek(84)
             for _ in range(num_triangles):
-                f.read(12) # Normal
+                f.read(12)  # Normal
                 v1 = struct.unpack("<fff", f.read(12))
                 v2 = struct.unpack("<fff", f.read(12))
                 v3 = struct.unpack("<fff", f.read(12))
-                f.read(2) # Attribute
+                f.read(2)   # Attribute
 
                 i1 = get_vert_idx(*v1)
                 i2 = get_vert_idx(*v2)
                 i3 = get_vert_idx(*v3)
                 triangles.append((i1, i2, i3))
         else:
-            # Parseo ASCII
             f.seek(0)
             text = f.read().decode("utf-8", errors="ignore")
             current_tri = []
@@ -88,140 +142,245 @@ def parse_stl(filepath):
 
     return vertices, triangles
 
-def create_3mf(parts_info, output_path, title="3D Printing Assembly"):
-    """
-    Empaqueta las partes en un archivo .3mf estándar.
-    parts_info: lista de dicts con:
-      - name: str
-      - vertices: list of (x,y,z)
-      - triangles: list of (i1,i2,i3)
-      - material: str
-      - color_hex: str
-    """
-    # 1. Preparar mapa de colores únicos
-    materials_list = []
-    mat_to_pindex = {}
-    for p in parts_info:
-        mat = p["material"]
-        if mat not in mat_to_pindex:
-            mat_to_pindex[mat] = len(materials_list)
-            materials_list.append((mat, p["color_hex"]))
+def load_or_create_base_config():
+    """Carga la plantilla base de 657 parámetros de ElegooSlicer."""
+    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    template_path = os.path.join(repo_root, "resources", "elegoo", "project_settings_base.json")
+    if os.path.exists(template_path):
+        with open(template_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return {}
 
-    # 2. Generar XML 3D/3dmodel.model
-    model_xml = [
-        '<?xml version="1.0" encoding="UTF-8"?>',
-        '<model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" xmlns:m="http://schemas.microsoft.com/3dmanufacturing/material/2015/02">',
-        f'  <metadata name="Title">{title}</metadata>',
-        f'  <metadata name="Application">3D Printing Specialist Template</metadata>',
-        '  <resources>'
+def package_elegoo_3mf(stl_path, output_path, intent="mechanical", material="PETG",
+                       color=None, overrides=None):
+    """
+    Empaqueta un modelo STL en un proyecto nativo para ElegooSlicer / OrcaSlicer.
+    """
+    stl_name = os.path.splitext(os.path.basename(stl_path))[0]
+    mat_key = material.upper()
+    mat_data = DEFAULT_MATERIALS.get(mat_key, DEFAULT_MATERIALS["PETG"])
+    hex_color = color if color else mat_data["color"]
+
+    # 1. Analizar vértices y orientar Z=0, centrado en cama (128, 128)
+    verts, tris = parse_stl(stl_path)
+    if len(verts) == 0:
+        raise ValueError(f"No se pudieron leer vértices de {stl_path}")
+
+    min_x = min(v[0] for v in verts)
+    max_x = max(v[0] for v in verts)
+    min_y = min(v[1] for v in verts)
+    max_y = max(v[1] for v in verts)
+    min_z = min(v[2] for v in verts)
+
+    # Offset para centrar en cama Elegoo Centauri (256x256x256 mm)
+    center_x = (min_x + max_x) / 2.0
+    center_y = (min_y + max_y) / 2.0
+    offset_x = 128.0 - center_x
+    offset_y = 128.0 - center_y
+    offset_z = -min_z  # Z apoyado exactamente en la cama (Z=0)
+
+    # 2. Configuración de parámetros de corte por intención
+    cfg = load_or_create_base_config()
+    intent_settings = INTENT_PRESETS.get(intent, INTENT_PRESETS["mechanical"]).copy()
+    if overrides:
+        intent_settings.update(overrides)
+
+    # REGLA CRÍTICA 1: TODOS LOS VALORES ESCALARES DEBEN SER STRINGS
+    for k, v in intent_settings.items():
+        cfg[k] = str(v)
+
+    # REGLA CRÍTICA 2: REGISTRAR TODAS LAS MODIFICACIONES EN different_settings_to_system
+    diff_keys = list(intent_settings.keys())
+    cfg["different_settings_to_system"] = [
+        ";".join(diff_keys),
+        "", "", ""
     ]
 
-    # Grupo de materiales/colores
-    model_xml.append('    <m:colorgroup id="1">')
-    for mat_name, col in materials_list:
-        model_xml.append(f'      <m:color color="{col}" />')
-    model_xml.append('    </m:colorgroup>')
+    # REGLA CRÍTICA 3: VINCULAR A PRESET BASE DEL SISTEMA
+    cfg["printer_settings_id"] = "Elegoo Centauri Carbon 2 0.4 nozzle"
+    cfg["default_print_profile"] = "0.20mm Standard @Elegoo CC2 0.4 nozzle"
+    cfg["print_settings_id"] = "0.20mm Standard @Elegoo CC2 0.4 nozzle"
 
-    # Objetos (mallas)
-    obj_id = 2
-    build_items = []
-    for p in parts_info:
-        pindex = mat_to_pindex[p["material"]]
-        pname = p["name"]
-        model_xml.append(f'    <object id="{obj_id}" type="model" name="{pname}" pid="1" pindex="{pindex}">')
-        model_xml.append('      <mesh>')
-        
-        # Vértices
-        model_xml.append('        <vertices>')
-        for vx, vy, vz in p["vertices"]:
-            model_xml.append(f'          <vertex x="{vx:.4f}" y="{vy:.4f}" z="{vz:.4f}" />')
-        model_xml.append('        </vertices>')
+    # Configurar filamento mono-material
+    for k, v in cfg.items():
+        if isinstance(v, list) and len(v) == 3:
+            cfg[k] = [str(v[0])]
 
-        # Triángulos
-        model_xml.append('        <triangles>')
-        for v1, v2, v3 in p["triangles"]:
-            model_xml.append(f'          <triangle v1="{v1}" v2="{v2}" v3="{v3}" />')
-        model_xml.append('        </triangles>')
+    cfg["filament_colour"] = [hex_color]
+    cfg["filament_multi_colour"] = [hex_color]
+    cfg["filament_type"] = [mat_data["type"]]
+    cfg["filament_vendor"] = ["Generic"]
+    cfg["filament_settings_id"] = [mat_data["id"]]
+    cfg["default_filament_profile"] = [mat_data["id"]]
+    cfg["filament_self_index"] = ["1"]
+    cfg["filament_printable"] = ["3"]
+    cfg["filament_density"] = [mat_data["density"]]
+    cfg["filament_cost"] = ["30"]
+    cfg["filament_flow_ratio"] = ["1"]
+    cfg["default_filament_colour"] = [hex_color]
 
-        model_xml.append('      </mesh>')
-        model_xml.append('    </object>')
-        
-        build_items.append(f'    <item objectid="{obj_id}" />')
-        obj_id += 1
-
-    model_xml.append('  </resources>')
-    model_xml.append('  <build>')
-    model_xml.extend(build_items)
-    model_xml.append('  </build>')
-    model_xml.append('</model>')
-
-    full_model_str = "\n".join(model_xml)
-
-    # 3. XMLs de estructura OPC
-    content_types_str = (
+    # 3. Construir XMLs de estructura 3MF
+    content_types = (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">\n'
-        '  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml" />\n'
-        '  <Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodelxml" />\n'
+        ' <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>\n'
+        ' <Default Extension="model" ContentType="application/vnd.ms-package.3dmanufacturing-3dmodel+xml"/>\n'
+        ' <Default Extension="png" ContentType="image/png"/>\n'
+        ' <Default Extension="gcode" ContentType="text/x.gcode"/>\n'
         '</Types>'
     )
 
-    rels_str = (
+    rels = (
         '<?xml version="1.0" encoding="UTF-8"?>\n'
         '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n'
-        '  <Relationship Target="/3D/3dmodel.model" Id="rel0" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel" />\n'
+        ' <Relationship Target="/3D/3dmodel.model" Id="rel-1" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/>\n'
+        ' <Relationship Target="/Metadata/plate_1.png" Id="rel-2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/thumbnail"/>\n'
         '</Relationships>'
     )
 
-    # 4. Escribir archivo ZIP .3mf
-    os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
-    with zipfile.ZipFile(output_path, "w", compression=zipfile.ZIP_DEFLATED) as z:
-        z.writestr("[Content_Types].xml", content_types_str)
-        z.writestr("_rels/.rels", rels_str)
-        z.writestr("3D/3dmodel.model", full_model_str)
+    model_rels = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">\n'
+        f' <Relationship Target="/3D/Objects/{stl_name}.model" Id="rel-1" Type="http://schemas.microsoft.com/3dmanufacturing/2013/01/3dmodel"/>\n'
+        '</Relationships>'
+    )
 
-    print(f"✅ Archivo 3MF empaquetado con éxito: {output_path}")
+    # REGLA CRÍTICA 4: Declarar ElegooSlicer-1.5.3.5 para evitar la advertencia de incompatibilidad
+    model_root = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" xmlns:BambuStudio="http://schemas.bambulab.com/package/2021" xmlns:p="http://schemas.microsoft.com/3dmanufacturing/production/2015/06" requiredextensions="p">\n'
+        ' <metadata name="Application">ElegooSlicer-1.5.3.5</metadata>\n'
+        ' <metadata name="OrcaSlicer">2.4.2</metadata>\n'
+        ' <metadata name="BambuStudio:3mfVersion">1</metadata>\n'
+        ' <resources>\n'
+        '  <object id="2" p:UUID="00000007-61cb-4c03-9d28-80fed5dfa1dc" type="model">\n'
+        '   <components>\n'
+        f'    <component p:path="/3D/Objects/{stl_name}.model" objectid="1" p:UUID="00070000-b206-40ff-9872-83e8017abed1" transform="1 0 0 0 1 0 0 0 1 0 0 0"/>\n'
+        '   </components>\n'
+        '  </object>\n'
+        ' </resources>\n'
+        ' <build p:UUID="2c7c17d8-22b5-4d84-8835-1976022ea369">\n'
+        f'  <item objectid="2" p:UUID="00000002-b1ec-4553-aec9-835e5b724bb4" transform="1 0 0 0 1 0 0 0 1 {offset_x:.4f} {offset_y:.4f} {offset_z:.4f}" printable="1" auto_drop="1"/>\n'
+        ' </build>\n'
+        '</model>\n'
+    )
+
+    slice_info = (
+        '<?xml version="1.0" encoding="UTF-8"?>\n'
+        '<config>\n'
+        '  <header>\n'
+        '    <header_item key="X-BBL-Client-Type" value="slicer"/>\n'
+        '    <header_item key="X-BBL-Client-Version" value="01.05.03.05"/>\n'
+        '    <header_item key="X-BBL-Client-Name" value="ElegooSlicer"/>\n'
+        '    <header_item key="OrcaSlicer-Version" value="2.4.2"/>\n'
+        '  </header>\n'
+        '</config>\n'
+    )
+
+    # Objeto de malla específico
+    obj_lines = [
+        '<?xml version="1.0" encoding="UTF-8"?>',
+        '<model unit="millimeter" xml:lang="en-US" xmlns="http://schemas.microsoft.com/3dmanufacturing/core/2015/02" xmlns:BambuStudio="http://schemas.bambulab.com/package/2021" xmlns:p="http://schemas.microsoft.com/3dmanufacturing/production/2015/06" requiredextensions="p">',
+        ' <metadata name="BambuStudio:3mfVersion">1</metadata>',
+        ' <resources>',
+        '  <object id="1" p:UUID="00070000-81cb-4c03-9d28-80fed5dfa1dc" type="model">',
+        '   <mesh>',
+        '    <vertices>'
+    ]
+    for vx, vy, vz in verts:
+        obj_lines.append(f'     <vertex x="{vx:.6f}" y="{vy:.6f}" z="{vz:.6f}"/>')
+    obj_lines.append('    </vertices>')
+    obj_lines.append('    <triangles>')
+    for v1, v2, v3 in tris:
+        obj_lines.append(f'     <triangle v1="{v1}" v2="{v2}" v3="{v3}"/>')
+    obj_lines.append('    </triangles>')
+    obj_lines.append('   </mesh>')
+    obj_lines.append('  </object>')
+    obj_lines.append(' </resources>')
+    obj_lines.append('</model>')
+    obj_model_xml = "\n".join(obj_lines)
+
+    # 4. Escribir archivo .3mf ZIP
+    os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
+    repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    res_dir = os.path.join(repo_root, "resources", "elegoo")
+
+    with zipfile.ZipFile(output_path, "w", compression=zipfile.ZIP_DEFLATED) as z:
+        z.writestr("[Content_Types].xml", content_types)
+        z.writestr("_rels/.rels", rels)
+        z.writestr("3D/3dmodel.model", model_root)
+        z.writestr("3D/_rels/3dmodel.model.rels", model_rels)
+        z.writestr(f"3D/Objects/{stl_name}.model", obj_model_xml)
+        z.writestr("Metadata/slice_info.config", slice_info)
+        z.writestr("Metadata/project_settings.config", json.dumps(cfg, indent=4))
+        z.writestr("Metadata/filament_sequence.json", json.dumps({"plate_1": {"nozzle_sequence": [], "optimal_assignment": [], "sequence": []}}))
+        z.writestr("Metadata/plate_1.json", json.dumps({
+            "bed_type": "textured_plate",
+            "filament_colors": [hex_color],
+            "filament_ids": [1],
+            "first_extruder": 0,
+            "nozzle_diameter": 0.4,
+            "version": 2
+        }))
+
+        # Incrustar miniaturas si están disponibles
+        for thumb in ["plate_1.png", "plate_1_small.png", "plate_no_light_1.png", "top_1.png", "pick_1.png"]:
+            t_path = os.path.join(res_dir, thumb)
+            if os.path.exists(t_path):
+                with open(t_path, "rb") as tf:
+                    z.writestr(f"Metadata/{thumb}", tf.read())
+
+    print(f"✅ Proyecto 3MF nativo generado con éxito:")
+    print(f"   ↳ Destino:  {output_path}")
+    print(f"   ↳ Intención: {intent.upper()} ({intent_settings['wall_loops']} paredes, {intent_settings['sparse_infill_density']} {intent_settings['sparse_infill_pattern']})")
+    print(f"   ↳ Soportes: {'Activados (' + intent_settings['support_type'] + ')' if intent_settings['enable_support'] == '1' else 'Desactivados'}")
+    print(f"   ↳ Barreno:  +{intent_settings.get('xy_hole_compensation', '0')} mm holgura X-Y")
+    print(f"   ↳ Material: {mat_key} ({hex_color})")
 
 def main():
-    parser = argparse.ArgumentParser(description="Empaqueta múltiples piezas STL en un contenedor 3MF multi-material.")
-    parser.add_argument("parts", nargs="+", help="Rutas de archivos STL, opcionalmente con sufijo :MATERIAL (ej. base.stl:PETG)")
+    parser = argparse.ArgumentParser(description="Empaquetador nativo 3MF para Elegoo Centauri Carbon y OrcaSlicer.")
+    parser.add_argument("stl", help="Ruta del archivo STL a empaquetar")
     parser.add_argument("-o", "--output", required=True, help="Ruta de destino del archivo .3mf")
-    parser.add_argument("--title", default="Ensamble 3D", help="Título del modelo para el slicer")
-    parser.add_argument("--default-material", default="PETG", help="Material por defecto si no se especifica (default: PETG)")
-    
+    parser.add_argument("--intent", choices=["mechanical", "standard", "fast", "aesthetic"], default="mechanical",
+                        help="Perfil de intención de corte (default: mechanical)")
+    parser.add_argument("--material", choices=list(DEFAULT_MATERIALS.keys()), default="PETG",
+                        help="Material del filamento (default: PETG)")
+    parser.add_argument("--color", help="Color HEX para el filamento (ej. #1A1A1A)")
+    parser.add_argument("--support", dest="support", action="store_true", help="Forzar soportes activados")
+    parser.add_argument("--no-support", dest="support", action="store_false", help="Forzar soportes desactivados")
+    parser.set_defaults(support=None)
+    parser.add_argument("--walls", type=int, help="Número de bucles de pared")
+    parser.add_argument("--infill", help="Densidad de relleno (ej. 40%%)")
+    parser.add_argument("--infill-pattern", help="Patrón de relleno (ej. gyroid, rectilinear)")
+    parser.add_argument("--hole-compensation", type=float, help="Compensación de agujeros X-Y en mm (ej. 0.15)")
+
     args = parser.parse_args()
 
-    parts_data = []
-    print(f"📦 Procesando {len(args.parts)} piezas para generar {args.output}...")
+    if not os.path.exists(args.stl):
+        print(f"❌ Error: Archivo STL no encontrado: {args.stl}")
+        sys.exit(1)
 
-    for spec in args.parts:
-        if ":" in spec:
-            fpath, mat = spec.split(":", 1)
-        else:
-            fpath, mat = spec, args.default_material
-            
-        if not os.path.exists(fpath):
-            print(f"❌ Error: Archivo no encontrado: {fpath}")
-            sys.exit(1)
+    overrides = {}
+    if args.support is not None:
+        overrides["enable_support"] = "1" if args.support else "0"
+    if args.walls is not None:
+        overrides["wall_loops"] = str(args.walls)
+    if args.infill is not None:
+        inf = args.infill if "%" in args.infill else f"{args.infill}%"
+        overrides["sparse_infill_density"] = inf
+    if args.infill_pattern is not None:
+        overrides["sparse_infill_pattern"] = args.infill_pattern
+    if args.hole_compensation is not None:
+        overrides["xy_hole_compensation"] = str(args.hole_compensation)
 
-        mat_upper = mat.upper()
-        mat_info = DEFAULT_MATERIALS.get(mat_upper, {"color": "#888888FF", "desc": "Material Personalizado"})
-        
-        name = os.path.splitext(os.path.basename(fpath))[0]
-        print(f"  • Leyendo '{name}' [{mat_upper}] desde {fpath}...")
-        verts, tris = parse_stl(fpath)
-        print(f"    ↳ {len(verts):,} vértices, {len(tris):,} triángulos")
-
-        parts_data.append({
-            "name": name,
-            "vertices": verts,
-            "triangles": tris,
-            "material": mat_upper,
-            "color_hex": mat_info["color"]
-        })
-
-    create_3mf(parts_data, args.output, title=args.title)
-    print(f"\n💡 Listo para abrir en OrcaSlicer o Elegoo Slicer con colores y posiciones preconfiguradas.")
+    package_elegoo_3mf(
+        stl_path=args.stl,
+        output_path=args.output,
+        intent=args.intent,
+        material=args.material,
+        color=args.color,
+        overrides=overrides
+    )
 
 if __name__ == "__main__":
     main()

@@ -131,8 +131,8 @@ python3 scripts/verify_mesh.py pieces/{clean_name}/{clean_name}.stl --manifest -
 # 3. Generar visor Three.js y vistas previas PNG
 python3 scripts/generate_gallery.py pieces/{clean_name}/{clean_name}.scad
 
-# 4. Empaquetar a 3MF para OrcaSlicer
-python3 scripts/export_3mf.py -o pieces/{clean_name}/{clean_name}.3mf pieces/{clean_name}/{clean_name}.stl:"{clean_name}"
+# 4. Empaquetar a 3MF para OrcaSlicer / ElegooSlicer
+python3 scripts/export_3mf.py pieces/{clean_name}/{clean_name}.stl -o pieces/{clean_name}/{clean_name}.3mf --intent mechanical --material {material}
 ```
 """
     with open(readme_path, "w", encoding="utf-8") as f:
