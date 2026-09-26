@@ -185,6 +185,16 @@ def package_elegoo_3mf(stl_path, output_path, intent="mechanical", material="PET
     if overrides:
         intent_settings.update(overrides)
 
+    # Optimización anti-fusión térmica para soportes en PETG
+    if mat_key == "PETG" and intent_settings.get("enable_support") == "1":
+        intent_settings.setdefault("support_top_z_distance", "0.26")
+        intent_settings.setdefault("support_bottom_z_distance", "0.26")
+        intent_settings.setdefault("support_object_xy_distance", "0.5")
+        intent_settings.setdefault("support_interface_top_layers", "1")
+        intent_settings.setdefault("support_interface_spacing", "1.0")
+        intent_settings.setdefault("support_style", "tree_slim")
+        intent_settings.setdefault("tree_support_tip_diameter", "0.6")
+
     # REGLA CRÍTICA 1: TODOS LOS VALORES ESCALARES DEBEN SER STRINGS
     for k, v in intent_settings.items():
         cfg[k] = str(v)
