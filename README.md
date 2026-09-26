@@ -46,7 +46,10 @@ Plantilla y marco de trabajo asistido por IA para concebir, diseñar, validar y 
          │                         (Perfiles OrcaSlicer por intención para Centauri Carbon)
          ▼
 [6. Control de Impresora] ────────► skills/elegoo-centauri/
-                                   (SDCP WebSocket: status, precalentamiento, luces)
+         │                         (SDCP WebSocket: status, precalentamiento, luces)
+         ▼ (Post-Impresión / Fallos)
+[7. Diagnóstico: Print Doctor] ───► skills/print-doctor/
+                                   (Resolución de warping, stringing, atascos y secado)
 ```
 
 ---
@@ -85,10 +88,14 @@ Plantilla y marco de trabajo asistido por IA para concebir, diseñar, validar y 
 │   │   ├── SKILL.md
 │   │   └── references/         # centauri_carbon_specs.md, slicer_settings.md
 │   │
-│   └── elegoo-centauri/        # Control SDCP WebSocket para Elegoo Centauri Carbon
+│   ├── elegoo-centauri/        # Control SDCP WebSocket para Elegoo Centauri Carbon
+│   │   ├── SKILL.md
+│   │   ├── scripts/            # centauri_ctl.py
+│   │   └── references/         # sdcp_protocol.md
+│   │
+│   └── print-doctor/           # Diagnóstico clínico y resolución de fallos FDM
 │       ├── SKILL.md
-│       ├── scripts/            # centauri_ctl.py
-│       └── references/         # sdcp_protocol.md
+│       └── references/         # fdm_troubleshooting.md, filament_doctor.md
 │
 ├── projects/                   # Directorio de trabajo para tus modelos y proyectos
 └── scripts/                    # Herramientas de verificación, empaquetado y galería

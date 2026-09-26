@@ -69,6 +69,10 @@ Cuando el usuario interactúe contigo, identifica en qué fase se encuentra y co
        ▼
 [Fase 6: Control Elegoo] ────► skills/elegoo-centauri/SKILL.md
                                (Monitoreo SDCP WebSocket, temperaturas, luces, preheat)
+       │
+       ▼ (Post-Impresión / Fallos)
+[Fase 7: Print Doctor] ──────► skills/print-doctor/SKILL.md
+                               (Diagnóstico de fallos, warping, stringing, atascos, secado)
 ```
 
 ---
@@ -82,6 +86,7 @@ Cuando el usuario interactúe contigo, identifica en qué fase se encuentra y co
 - `skills/blender-mcp/`: Directivas de modelado orgánico, esculturas y miniaturas vía BlenderMCP.
 - `skills/slicer-advisor/`: Recomendaciones de corte y perfiles optimizados para la Elegoo Centauri Carbon.
 - `skills/elegoo-centauri/`: Scripts CLI para conectar y monitorear la Elegoo Centauri Carbon vía SDCP.
+- `skills/print-doctor/`: Diagnóstico clínico y resolución de fallos FDM (warping, stringing, heat creep).
 - `scripts/`: Herramientas de verificación de imprimibilidad (`verify_mesh.py`), empaquetado multi-material (`export_3mf.py`), probetas de calibración (`generate_coupon.py`) y generación de galería visual (`generate_gallery.py`).
 - `config.toml`: Configuración local (IP de la impresora, parámetros del usuario).
 - `mcp_servers.example.json`: Configuración de servidores MCP (ej. `blender-mcp`).
