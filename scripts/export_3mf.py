@@ -201,13 +201,13 @@ def package_elegoo_3mf(stl_path, output_path, intent="mechanical", material="PET
         intent_settings.setdefault("support_style", "tree_slim")
         intent_settings.setdefault("tree_support_tip_diameter", "0.6")
     elif mat_key in ("ABS", "ASA") and intent_settings.get("enable_support") == "1":
-        intent_settings.setdefault("support_top_z_distance", "0.22")
-        intent_settings.setdefault("support_bottom_z_distance", "0.22")
-        intent_settings.setdefault("support_object_xy_distance", "0.5")
-        intent_settings.setdefault("support_interface_top_layers", "1")
-        intent_settings.setdefault("support_interface_spacing", "1.0")
+        intent_settings.setdefault("support_top_z_distance", "0.24")
+        intent_settings.setdefault("support_bottom_z_distance", "0.24")
+        intent_settings.setdefault("support_object_xy_distance", "0.6")
+        intent_settings.setdefault("support_interface_top_layers", "2")
+        intent_settings.setdefault("support_interface_spacing", "1.2")
         intent_settings.setdefault("support_style", "tree_slim")
-        intent_settings.setdefault("tree_support_tip_diameter", "0.6")
+        intent_settings.setdefault("tree_support_tip_diameter", "0.5")
 
     # REGLA CRÍTICA 1: TODOS LOS VALORES ESCALARES DEBEN SER STRINGS
     for k, v in intent_settings.items():
