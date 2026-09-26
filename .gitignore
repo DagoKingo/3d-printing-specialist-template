@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+env/
+venv/
+
+# OpenSCAD / Slicer temporales
+*.gcode
+*.3mf.temp
+*.stl.temp
+
+# Proyectos locales no rastreados (opcional)
+# projects/*
+# !projects/.gitkeep
+
+# IDE y Sistema
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

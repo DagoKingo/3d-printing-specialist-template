@@ -1,0 +1,24 @@
+# Configuración activa de 3D Printing Specialist Template
+
+[printer]
+model = "Elegoo Centauri Carbon"
+build_volume_x = 256.0 # mm
+build_volume_y = 256.0 # mm
+build_volume_z = 256.0 # mm
+nozzle_diameter = 0.4  # mm
+enclosed_chamber = true
+max_nozzle_temp = 300  # °C
+max_bed_temp = 110     # °C
+
+# Parámetros de conexión de red (SDCP WebSocket)
+ip = "192.168.1.100"
+sdcp_port = 3030
+
+[slicer]
+preferred = "OrcaSlicer"
+binary_path = "orca-slicer"
+
+[design]
+default_cad = "openscad"
+default_preview_fn = 32
+default_export_fn = 128

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Printing Specialist — Visor 3D Interactivo</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a1a;
+            color: #efefef;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            overflow: hidden;
+        }
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+        }
+        #ui-overlay {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(30, 30, 30, 0.85);
+            padding: 16px 20px;
+            border-radius: 8px;
+            border: 1px solid #444;
+            backdrop-filter: blur(8px);
+            max-width: 320px;
+        }
+        h1 {
+            font-size: 16px;
+            margin: 0 0 8px 0;
+            color: #4da6ff;
+        }
+        p {
+            font-size: 12px;
+            margin: 4px 0;
+            color: #aaa;
+        }
+        .controls {
+            margin-top: 12px;
+            display: flex;
+            gap: 8px;
+        }
+        button {
+            background: #2a2a2a;
+            border: 1px solid #555;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        button:hover {
+            background: #3a3a3a;
+            border-color: #4da6ff;
+        }
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 18px;
+            color: #4da6ff;
+        }
+    </style>
+    <!-- Three.js + STLLoader + OrbitControls via CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/STLLoader.js"></script>
+</head>
+<body>
+    <div id="loading">Cargando modelo 3D...</div>
+    <div id="ui-overlay">
+        <h1 id="model-name">Visor de Modelo 3D</h1>
+        <p id="model-dims">Dimensiones: Calculando...</p>
+        <p>🖱️ Clic izq: Rotar | Clic der: Desplazar | Rueda: Zoom</p>
+        <div class="controls">
+            <button onclick="resetCamera()">Centrar</button>
+            <button onclick="toggleWireframe()">Malla (Wireframe)</button>
+        </div>
+    </div>
+    <div id="canvas-container"></div>
+
+    <script>
+        let scene, camera, renderer, controls, mesh;
+        let isWireframe = false;
+
+        function init() {
+            const container = document.getElementById('canvas-container');
+            
+            // Scene
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x1a1a1a);
+
+            // Camera
+            camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(100, 100, 100);
+
+            // Renderer
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            container.appendChild(renderer.domElement);
+
+            // Controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+
+            // Lights
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            const dirLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
+            dirLight1.position.set(1, 1, 1).normalize();
+            scene.add(dirLight1);
+
+            const dirLight2 = new THREE.DirectionalLight(0x4da6ff, 0.4);
+            dirLight2.position.set(-1, -1, -1).normalize();
+            scene.add(dirLight2);
+
+            // Bed Grid (256x256 mm - Elegoo Centauri Carbon build plate)
+            const gridHelper = new THREE.GridHelper(256, 25.6, 0x4da6ff, 0x333333);
+            gridHelper.position.y = 0;
+            scene.add(gridHelper);
+
+            // Load STL from URL parameter or default 'model.stl'
+            const urlParams = new URLSearchParams(window.location.search);
+            const stlFile = urlParams.get('model') || 'model.stl';
+
+            const loader = new THREE.STLLoader();
+            loader.load(stlFile, function (geometry) {
+                geometry.computeVertexNormals();
+                geometry.center();
+
+                // Compute bounding box
+                geometry.computeBoundingBox();
+                const bb = geometry.boundingBox;
+                const sizeX = (bb.max.x - bb.min.x).toFixed(1);
+                const sizeY = (bb.max.y - bb.min.y).toFixed(1);
+                const sizeZ = (bb.max.z - bb.min.z).toFixed(1);
+                document.getElementById('model-dims').innerText = `Dimensiones: ${sizeX} x ${sizeY} x ${sizeZ} mm`;
+                document.getElementById('model-name').innerText = stlFile;
+
+                const material = new THREE.MeshStandardMaterial({
+                    color: 0x3388ff,
+                    metalness: 0.1,
+                    roughness: 0.5
+                });
+
+                mesh = new THREE.Mesh(geometry, material);
+                // Place bottom on grid
+                mesh.position.y = (bb.max.z - bb.min.z) / 2;
+                mesh.rotation.x = -Math.PI / 2; // STL orientation
+                scene.add(mesh);
+
+                document.getElementById('loading').style.display = 'none';
+                resetCamera();
+            }, undefined, function (error) {
+                document.getElementById('loading').innerText = 'No se pudo cargar el archivo STL: ' + stlFile;
+                console.error(error);
+            });
+
+            window.addEventListener('resize', onWindowResize, false);
+            animate();
+        }
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        function resetCamera() {
+            if (mesh) {
+                camera.position.set(120, 120, 120);
+                controls.target.set(0, mesh.position.y, 0);
+            }
+        }
+
+        function toggleWireframe() {
+            if (mesh) {
+                isWireframe = !isWireframe;
+                mesh.material.wireframe = isWireframe;
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

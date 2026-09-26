@@ -1,0 +1,6 @@
+# Dependencias Python recomendadas para scripts auxiliares
+# Para instalar: pip install -r requirements.txt (o en un venv)
+websockets>=12.0     # Para el cliente SDCP de la Elegoo Centauri Carbon
+trimesh>=4.0.0       # Para validación geométrica de mallas y cálculo de volumen/manifold
+numpy>=1.24.0        # Operaciones numéricas con trimesh
+requests>=2.31.0     # Consultas opcionales a APIs/datasheets
