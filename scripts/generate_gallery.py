@@ -2,6 +2,7 @@
 """
 generate_gallery.py — Generador de vistas previas multiángulo y visor HTML 3D interactivo
 Inspirado en el GalleryView workflow de chriscantey/skill-3d-printing.
+Organiza los renders en 'renders/' y crea 'viewer.html' en el directorio de la pieza.
 """
 
 import sys
@@ -21,19 +22,19 @@ def generate_gallery(scad_or_stl_path, render_part="preview"):
     file_name = os.path.basename(scad_or_stl_path)
     name_without_ext, ext = os.path.splitext(file_name)
     
-    output_dir = os.path.join(base_dir, "gallery")
-    os.makedirs(output_dir, exist_ok=True)
+    renders_dir = os.path.join(base_dir, "renders")
+    os.makedirs(renders_dir, exist_ok=True)
 
-    print(f"🎨 Generando galería para: {file_name} en {output_dir}")
+    print(f"🎨 Generando artefactos visuales para: {file_name} en {base_dir}")
 
-    # Si es archivo .scad, generar renders con OpenSCAD CLI
+    # Si es archivo .scad, compilar STL y capturar renders
     if ext.lower() == ".scad":
-        stl_output = os.path.join(output_dir, f"{name_without_ext}.stl")
+        stl_output = os.path.join(base_dir, f"{name_without_ext}.stl")
         print(f"📦 Compilando a STL ({render_part})...")
         cmd_stl = f"openscad -D 'RENDER=\"{render_part}\"' -o \"{stl_output}\" \"{scad_or_stl_path}\""
         ok, out = run_command(cmd_stl)
         if not ok:
-            print(f"⚠️ Nota: Para compilar directo, asegúrate de tener instalado 'openscad' (sudo apt install openscad).")
+            print(f"⚠️ Nota: Para compilar directo, asegúrate de tener instalado 'openscad'.")
         else:
             print(f"✅ STL generado: {stl_output}")
 
@@ -46,31 +47,25 @@ def generate_gallery(scad_or_stl_path, render_part="preview"):
         ]
         
         for name, cam in angles:
-            png_out = os.path.join(output_dir, f"render-{name}.png")
+            png_out = os.path.join(renders_dir, f"render-{name}.png")
             cmd_img = f"openscad --autocenter --viewall --colorscheme='Tomorrow Night' --camera={cam} --imgsize=800,600 -D 'RENDER=\"{render_part}\"' -o \"{png_out}\" \"{scad_or_stl_path}\""
             ok, _ = run_command(cmd_img)
             if ok:
                 print(f"  • Vista {name}: {png_out}")
 
-    elif ext.lower() == ".stl":
-        # Ya es un STL, copiar al directorio de galería
-        stl_output = os.path.join(output_dir, file_name)
-        shutil.copyfile(scad_or_stl_path, stl_output)
-
-    # Copiar plantilla del visor Three.js
+    # Copiar y configurar plantilla del visor Three.js (viewer.html)
     template_src = os.path.join(os.path.dirname(__file__), "../skills/parametric-cad/templates/viewer.html")
-    viewer_dst = os.path.join(output_dir, "index.html")
+    viewer_dst = os.path.join(base_dir, "viewer.html")
+    target_stl = f"{name_without_ext}.stl" if ext.lower() == ".scad" else file_name
     
     if os.path.exists(template_src):
-        # Ajustar para que cargue el STL correspondiente
         with open(template_src, "r", encoding="utf-8") as f:
             html = f.read()
-        target_stl = f"{name_without_ext}.stl" if ext.lower() == ".scad" else file_name
         html = html.replace("model.stl", target_stl)
         with open(viewer_dst, "w", encoding="utf-8") as f:
             f.write(html)
         print(f"🌐 Visor 3D interactivo creado en: file://{viewer_dst}")
-        print("💡 Puedes abrir ese enlace en tu navegador para rotar e inspeccionar el modelo.")
+        print("💡 Puedes abrir ese archivo en cualquier navegador para rotar e inspeccionar el modelo 3D.")
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:

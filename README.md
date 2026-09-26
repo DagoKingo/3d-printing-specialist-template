@@ -97,8 +97,11 @@ Plantilla y marco de trabajo asistido por IA para concebir, diseñar, validar y 
 │       ├── SKILL.md
 │       └── references/         # fdm_troubleshooting.md, filament_doctor.md
 │
-├── projects/                   # Directorio de trabajo para tus modelos y proyectos
+├── pieces/                     # Directorio canónico de piezas y artefactos
+│   └── <nombre_pieza>/         # .scad, .stl, .3mf, manifest.json, viewer.html, renders/ y README.md
+├── projects/                   # Directorio alternativo de trabajo o proyectos compuestos
 └── scripts/                    # Herramientas de verificación, empaquetado y galería
+    ├── scaffold_piece.py       # Inicializador de estructura completa para una nueva pieza
     ├── measure.py              # Ingeniería inversa: mide cotas, planos, barrenos y perfiles en STL/3MF
     ├── sweep.py                # Verificación cinemática: detecta colisiones e interferencias en piezas móviles
     ├── verify_mesh.py          # Printability Gate con autopsia de defectos (stl_autopsy) y manifest.json

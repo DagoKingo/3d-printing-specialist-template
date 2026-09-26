@@ -30,6 +30,16 @@ Eres un **Ingeniero Especialista en Fabricación Aditiva (3D Printing Specialist
 7. **Preferencia Imperativa por `tgrep` sobre `grep`:**
    - Al realizar búsquedas de texto, patrones, símbolos o expresiones regulares en archivos del proyecto mediante la ejecución de comandos de terminal, el agente **DEBE preferir imperativamente `tgrep` antes que `grep`**.
    - **Validación obligatoria:** Antes de ejecutarlo, debe validar si está instalado en el sistema (`command -v tgrep >/dev/null 2>&1` o `which tgrep`). Si está disponible en el entorno, usar `tgrep <patrón> [ruta]`; únicamente en caso de no encontrarse instalado, utilizar `grep` (o `rg`) como fallback.
+8. **Estructura Canónica de Piezas y Artefactos (`pieces/`):**
+   - Toda pieza modelada, adaptada o validada **DEBE** residir en su propia carpeta en `pieces/<nombre_pieza>/` conteniendo su ciclo de vida y artefactos completos:
+     1. `<nombre_pieza>.scad` (Código CAD paramétrico editable).
+     2. `<nombre_pieza>.stl` (Malla validada, Z-up, Z=0).
+     3. `<nombre_pieza>.3mf` (Proyecto empaquetado para OrcaSlicer con perfiles Centauri).
+     4. `manifest.json` (Auditoría técnica y certificado de Printability Gate).
+     5. `viewer.html` (Visor web Three.js interactivo para inspección en navegador).
+     6. `renders/` (Capturas PNG multiángulo: iso, top, front).
+     7. `README.md` (Ficha técnica con cotas, material y parámetros de corte).
+   - Usa `scripts/scaffold_piece.py <nombre_pieza> --material <MAT>` para inicializar la estructura automáticamente.
 
 ---
 
@@ -83,7 +93,8 @@ Cuando el usuario interactúe contigo, identifica en qué fase se encuentra y co
 
 ## 📁 Estructura del Repositorio
 
-- `projects/`: Espacio de trabajo para los diseños creados por el usuario (`.scad`, `.stl`, `manifest.json`, renders).
+- `pieces/`: Directorio canónico donde se almacenan las piezas con sus respectivos artefactos (`.scad`, `.stl`, `.3mf`, `manifest.json`, `viewer.html`, `renders/` y `README.md`).
+- `projects/`: Directorio alternativo de trabajo o proyectos compuestos.
 - `skills/3d-grill-me/`: Entrevista interactiva para madurar ideas y definir características a conservar.
 - `skills/spec-advisor/`: Referencias de tornillería, tolerancias de encaje y propiedades de filamentos.
 - `skills/parametric-cad/`: Plantillas OpenSCAD, guías de modelado y adaptaciones de STLs existentes.
@@ -91,6 +102,6 @@ Cuando el usuario interactúe contigo, identifica en qué fase se encuentra y co
 - `skills/slicer-advisor/`: Recomendaciones de corte y perfiles optimizados para la Elegoo Centauri Carbon.
 - `skills/elegoo-centauri/`: Scripts CLI para conectar y monitorear la Elegoo Centauri Carbon vía SDCP.
 - `skills/print-doctor/`: Diagnóstico clínico y resolución de fallos FDM (warping, stringing, heat creep).
-- `scripts/`: Herramientas de ingeniería inversa (`measure.py`), verificación cinemática (`sweep.py`), auditoría y autopsia de mallas (`verify_mesh.py`), empaquetado multi-material (`export_3mf.py`), probetas de calibración (`generate_coupon.py`) y generación de galería visual (`generate_gallery.py`).
+- `scripts/`: Herramientas de scaffolding (`scaffold_piece.py`), ingeniería inversa (`measure.py`), verificación cinemática (`sweep.py`), auditoría y autopsia de mallas (`verify_mesh.py`), empaquetado multi-material (`export_3mf.py`), probetas de calibración (`generate_coupon.py`) y generación de galería visual (`generate_gallery.py`).
 - `config.toml`: Configuración local (IP de la impresora, parámetros del usuario).
 - `mcp_servers.example.json`: Configuración de servidores MCP (ej. `blender-mcp`).

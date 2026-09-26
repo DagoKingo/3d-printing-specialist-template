@@ -22,3 +22,8 @@ binary_path = "orca-slicer"
 default_cad = "openscad"
 default_preview_fn = 32
 default_export_fn = 128
+
+[paths]
+pieces_dir = "pieces"
+projects_dir = "projects"
+
