@@ -68,8 +68,12 @@ Haz las preguntas de manera conversacional, agrupadas por lógica, sin abrumar c
 - ¿Existen restricciones de espacio o interferencias alrededor?
 - **Levantamiento de Datasheet:** Si el objeto es un componente comercial o industrial con número de parte (e.g. `Honeywell Slate R8001M1150`), consulta su datasheet oficial o planos mecánicos para extraer cotas de eje, ranuras de chaveta, torque y temperatura de trabajo, registrándolos en la ficha técnica de la pieza.
 
-### 5. Estética vs. Resistencia vs. Velocidad
-- ¿El acabado visual y la ausencia de costuras son prioritarios, o la resistencia mecánica prima sobre la apariencia?
+### 5. Estética, Acabado Superficial y Zonificación (Zonas A, B y C)
+- **Zona A (Cosmética / Visible):** ¿Qué cara o superficie de la pieza estará a la vista permanente del usuario?
+  - *Regla Inquebrantable:* La Zona A **NUNCA debe tocar soportes**.
+  - ¿Requiere acabado ultra liso de inyección (**Planchado / Ironing** en capa superior) o acabado texturizado industrial mate (**orientada contra la cama PEI**)?
+- **Zona B (Mecánica / Funcional):** ¿Qué zonas corresponden a barrenos, estrías, roscas o encajes? (Prioridad dimensional mediante `$slop` en CAD; prohibido apoyar soportes en barrenos pasantes).
+- **Zona C (Oculta / No visible):** ¿Qué caras quedan ocultas tras el ensamble? (Zona designada para ubicar voladizos y apoyos de soporte si la geometría lo exige).
 
 ### 6. Enfoque de Modelado (Mecánico vs. Orgánico)
 - ¿La pieza es técnica/paramétrica (carcasa, soporte, adaptador, engranaje) o es orgánica/escultural (figura, personaje, mango ergonómico, superficie estética curva)?

@@ -101,3 +101,54 @@ python3 scripts/export_3mf.py pieces/<pieza>/<pieza>.stl -o pieces/<pieza>/<piez
 python3 scripts/export_3mf.py pieza.stl -o proyecto.3mf --material PLA --support --walls 4 --infill 30%
 ```
 
+---
+
+## 🎨 Política de Zonificación y Acabado Superficial por Aplicación
+
+En fabricación aditiva FDM, **todo soporte degrada inevitablemente la superficie sobre la que apoya**. Las caras visibles nunca deben tratarse con la misma estrategia de laminación que las caras mecánicas o de ensamble.
+
+### 1. Zonificación Tripartita Obligatoria (A / B / C)
+
+| Zona | Propósito | Regla de Orientación y Laminación | Uso de Soportes |
+| :--- | :--- | :--- | :--- |
+| **Zona A (Cosmética / Visible)** | Caras visibles continuamente por el usuario (escalas, carátulas, tapas, frentes). | Orientar contra cama texturizada PEI (acabado mate industrial homogéneo) o hacia arriba en `+Z` con **Planchado (Ironing)** y patrón monotónico. | 🚫 **ESTRICTAMENTE PROHIBIDO.** Nunca debe apoyar sobre soportes. |
+| **Zona B (Mecánica / Funcional)** | Barrenos, estrías, roscas, chaveteros y guías de deslizamiento. | Orientar en plano XY o vertical limpio. Precisión dimensional mediante holgura paramétrica `$slop` en CAD. | 🚫 Prohibido en orificios pasantes o chaveteros funcionales. |
+| **Zona C (Oculta / No Visible)** | Caras traseras, inferiores o internas que quedan tapadas tras el montaje final. | Zona de sacrificio para colocar costuras (*seams*) y apoyar voladizos. | ✅ **Permitido.** Es la única zona donde se autoriza generar soportes. |
+
+### 2. Arsenal de Acabado Superior para Zona A (Top Surface Tuning)
+
+Cuando la Zona A debe imprimirse hacia arriba en `+Z`, se deben aplicar los siguientes parámetros en ElegooSlicer / OrcaSlicer:
+
+1. **Planchado Térmico (Ironing):**
+   - `"ironing_type": "top"` (Planchar todas las caras superiores planas).
+   - `"ironing_pattern": "rectilinear"`.
+   - `"ironing_speed": "30"` (30 mm/s para fusión térmica uniforme).
+   - `"ironing_flow": "10%"` (Flujo mínimo para sellar micro-surcos sin desbordar plástico).
+   - `"ironing_spacing": "0.15"` (Paso estrecho entre pasadas de boquilla).
+   > **Efecto visual:** Elimina la textura estriada de líneas individuales, logrando una superficie continua, lisa y satinada similar a moldeo por inyección.
+
+2. **Patrón Monotónico Unidireccional:**
+   - `"top_surface_pattern": "monotonicline"`.
+   - Garantiza que todas las pasadas del relleno superior viajen en el mismo sentido, eliminando las bandas de reflexión de luz disímiles (*sheen bands*) que se producen con el zigzag tradicional.
+
+3. **Velocidad y Flujo de Capa Superior:**
+   - Reducir velocidad de superficie superior a `30 – 50 mm/s`.
+   - Ancho de línea superior (`top_surface_line_width`): `0.35 mm` o `0.32 mm` (con boquilla de 0.4 mm).
+
+### 3. Técnicas de Soporte de Cero Cicatriz (Zero-Scar Supports)
+
+Cuando la geometría de la pieza hace físicamente imposible evitar soportes bajo una cara:
+
+* **Estrategia Mono-Material (Mismo Filamento):**
+  - Estilo: `"support_style": "tree_slim"` (Árbol fino).
+  - Punta de contacto: `"tree_support_tip_diameter": "0.5"` o `"0.6"`.
+  - Distancia Z superior: `"support_top_z_distance": "0.26"` (en PETG) o `"0.20"` (en PLA).
+  - Distancia XY al objeto: `"support_object_xy_distance": "0.50"` (evita que los troncos toquen o salpiquen las paredes visibles de la Zona A).
+  - Capas de interfaz: 1 capa con espaciado de `1.0 mm`.
+
+* **Estrategia Multi-Material Incompatible (Zero-Gap / Acabado Espejo):**
+  - **PETG con interfaz de PLA** (o PLA con interfaz de PETG).
+  - Debido a la incompatibilidad molecular entre ambos polímeros, **no existe adherencia química**.
+  - Ajuste de corte: `"support_top_z_distance": "0.00"` (contacto total en Z).
+  - El soporte se desprende con un ligero soplido y la cara apoyada adquiere la textura lisa de la interfaz sin desgarros ni hilos caídos.
+

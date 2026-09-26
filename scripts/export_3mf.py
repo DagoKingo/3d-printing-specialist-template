@@ -76,11 +76,17 @@ INTENT_PRESETS = {
         "wall_loops": "3",
         "sparse_infill_density": "20%",
         "sparse_infill_pattern": "gyroid",
-        "enable_support": "1",
+        "enable_support": "0",
         "support_type": "tree(auto)",
         "xy_hole_compensation": "0",
         "bottom_shell_layers": "4",
-        "top_shell_layers": "5"
+        "top_shell_layers": "5",
+        "ironing_type": "top",
+        "ironing_pattern": "rectilinear",
+        "ironing_flow": "10%",
+        "ironing_speed": "30",
+        "ironing_spacing": "0.15",
+        "top_surface_pattern": "monotonicline"
     }
 }
 
@@ -363,6 +369,7 @@ def main():
     parser.add_argument("--infill", help="Densidad de relleno (ej. 40%%)")
     parser.add_argument("--infill-pattern", help="Patrón de relleno (ej. gyroid, rectilinear)")
     parser.add_argument("--hole-compensation", type=float, help="Compensación de agujeros X-Y en mm (ej. 0.15)")
+    parser.add_argument("--ironing", dest="ironing", action="store_true", help="Activar planchado térmico (ironing) en capas superiores")
 
     args = parser.parse_args()
 
@@ -382,6 +389,13 @@ def main():
         overrides["sparse_infill_pattern"] = args.infill_pattern
     if args.hole_compensation is not None:
         overrides["xy_hole_compensation"] = str(args.hole_compensation)
+    if args.ironing:
+        overrides["ironing_type"] = "top"
+        overrides["ironing_pattern"] = "rectilinear"
+        overrides["ironing_flow"] = "10%"
+        overrides["ironing_speed"] = "30"
+        overrides["ironing_spacing"] = "0.15"
+        overrides["top_surface_pattern"] = "monotonicline"
 
     package_elegoo_3mf(
         stl_path=args.stl,
