@@ -48,7 +48,7 @@ INTENT_PRESETS = {
         "sparse_infill_pattern": "gyroid",
         "enable_support": "1",
         "support_type": "tree(auto)",
-        "xy_hole_compensation": "0.15",
+        "xy_hole_compensation": "0.0",
         "bottom_shell_layers": "5",
         "top_shell_layers": "5"
     },
