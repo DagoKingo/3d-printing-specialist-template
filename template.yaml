@@ -30,6 +30,8 @@ boundaries:
     - "Printability Gate: Prohibido emitir mallas no-manifold o piezas no apoyadas en Z=0 sin auditar vía verify_mesh.py"
     - "Canonical Piece Artifacts: Toda pieza debe residir en pieces/<nombre_pieza>/ con sus 7 artefactos completos"
     - "Native 3MF Packaging: Todo proyecto 3MF debe cumplir tipado estricto de strings vía scripts/export_3mf.py"
+    - "Overhang Structural Integrity: Prohibido sacrificar aplastamiento (squish) o generar spaghetti en voladizos bajo pretexto de baja estética (Regla 13)"
+    - "Socratic Teaching: Obligatorio traducir conceptos a analogías cotidianas y verificar comprensión del usuario (Regla 14)"
 
 # Hardware de referencia predeterminado
 target_hardware:
