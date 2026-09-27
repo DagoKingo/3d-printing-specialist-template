@@ -88,7 +88,7 @@ def main():
     parser.add_argument("--type", choices=["hole", "slot", "orificio", "ranura"], default="hole", help="Tipo de geometría a calibrar")
     parser.add_argument("--nominal", type=float, required=True, help="Cota nominal exacta del objeto (mm), ej. 8.0 para rodamiento 608")
     parser.add_argument("--steps", default="0.10,0.15,0.20,0.25,0.30", help="Lista de holguras separadas por comas (mm)")
-    parser.add_argument("-o", "--output", default="projects/test_coupon.scad", help="Ruta de salida del archivo .scad")
+    parser.add_argument("-o", "--output", default="test_coupon.scad", help="Ruta de salida del archivo .scad")
     parser.add_argument("--thickness", type=float, default=4.0, help="Espesor de la placa (mm)")
     parser.add_argument("--compile", action="store_true", help="Compilar inmediatamente a STL con OpenSCAD")
 

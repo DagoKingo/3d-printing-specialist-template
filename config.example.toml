@@ -28,6 +28,5 @@ default_preview_fn = 32
 default_export_fn = 128
 
 [paths]
-pieces_dir = "pieces"        # Directorio canónico para piezas con sus artefactos
-projects_dir = "projects"    # Directorio para proyectos compuestos
+pieces_dir = "pieces"        # Directorio canónico para piezas con sus artefactos y prototipos
 

@@ -98,9 +98,8 @@ Plantilla y marco de trabajo asistido por IA para concebir, diseñar, validar y 
 │       ├── SKILL.md
 │       └── references/         # fdm_troubleshooting.md, filament_doctor.md
 │
-├── pieces/                     # Directorio canónico de piezas y artefactos
-│   └── <nombre_pieza>/         # .scad, .stl, .3mf, manifest.json, viewer.html, renders/, README.md y print_feedback.md
-├── projects/                   # Directorio alternativo de trabajo o proyectos compuestos
+├── pieces/                     # Directorio canónico de piezas, artefactos y prototipos
+│   └── <nombre_pieza>/         # README.md, artifacts/ (artefactos finales) y prototypes/ (draft-[N]/)
 └── scripts/                    # Herramientas de verificación, empaquetado y galería
     ├── verify-environment.sh   # Auditor canónico de entorno, dependencias FDM y sincronización upstream
     ├── feedback.py             # Registro de feedback post-impresión y triage clínico con Print Doctor

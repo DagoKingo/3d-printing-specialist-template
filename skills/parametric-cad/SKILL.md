@@ -97,10 +97,10 @@ OpenSCAD permite importar mallas STL existentes mediante `import("archivo.stl")`
 Compilar el ensamble o piezas a STL:
 ```bash
 # Exportar pieza base
-openscad -D 'RENDER="base"' -o projects/mi_proyecto/base.stl projects/mi_proyecto/modelo.scad
+openscad -D 'RENDER="base"' -o pieces/mi_pieza/artifacts/base.stl pieces/mi_pieza/artifacts/modelo.scad
 
 # Exportar con alta resolución
-openscad -D 'RENDER="base"' -D '$fn=128' -o projects/mi_proyecto/base.stl projects/mi_proyecto/modelo.scad
+openscad -D 'RENDER="base"' -D '$fn=128' -o pieces/mi_pieza/artifacts/base.stl pieces/mi_pieza/artifacts/modelo.scad
 ```
 
 ---

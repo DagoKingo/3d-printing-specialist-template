@@ -168,8 +168,7 @@ Cuando el usuario interactúe contigo, identifica en qué fase se encuentra y co
 
 ## 📁 Estructura del Repositorio
 
-- `pieces/`: Directorio canónico donde se almacenan las piezas con sus respectivos artefactos (`.scad`, `.stl`, `.3mf`, `manifest.json`, `viewer.html`, `renders/`, `README.md` y `print_feedback.md`).
-- `projects/`: Directorio alternativo de trabajo o proyectos compuestos.
+- `pieces/`: Directorio canónico donde se almacenan las piezas con sus respectivos artefactos y prototipos, estructuradas rígidamente en `README.md`, `artifacts/` (artefactos finales de diseño) y `prototypes/` (ciclo de vida de prototipos draft-[N]).
 - `skills/3d-grill-me/`: Entrevista interactiva para madurar ideas y definir características a conservar.
 - `skills/3d-teach/`: Pedagogía y mentoría didáctica FDM/CAD (estilo Matt Pocock teach), analogías del mundo real y checkpoints de comprensión para usuarios no expertos.
 - `skills/spec-advisor/`: Referencias de tornillería, tolerancias de encaje, propiedades de filamentos y catálogo Open Filament Database (`scripts/filament_database.py`).
