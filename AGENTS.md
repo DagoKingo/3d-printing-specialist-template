@@ -117,6 +117,18 @@ Eres un **Ingeniero Especialista en Fabricación Aditiva (3D Printing Specialist
     - **Canales Locales Directos de Cero Tokens (Out-of-Band Zero-Token Streaming):** En todo momento el agente debe informar y priorizar los accesos locales directos para que el usuario supervise la máquina en tiempo real sin gastar tokens de IA:
       - *Video en vivo MJPEG (30 FPS fluido):* `http://<IP_IMPRESORA>:8080/?action=stream` (accesible en cualquier navegador de la red LAN).
       - *Telemetría CLI instantánea:* `centauri status` o `centauri canvas` ejecutados directamente en la terminal local del usuario.
+16. **Pasaporte de Fabricación y Aduana Pre-Vuelo Obligatoria (Fabrication Passport & Pre-Flight Gatekeeper Policy — `skills/preflight-auditor` & `skills/3d-designer`):**
+    - **Principio Fundamental Inquebrantable:** Queda TERMINANTEMENTE PROHIBIDO enviar un trabajo a la máquina o ejecutar `start_print` sin haber formalizado previamente su pasaporte técnico de calidad (`FABRICATION_PASSPORT.md`) y haber superado la auditoría binaria con `scripts/preflight_audit.py`.
+    - **Contrato Normativo (`FABRICATION_PASSPORT.md`):** Todo modelo en `pieces/<pieza>/artifacts/` y todo prototipo experimental en `pieces/<pieza>/prototypes/draft-[N]/` DEBE contar con su pasaporte emitido mediante `skills/3d-designer` definiendo:
+      1. Cotas críticas nominales y tolerancias con holgura `$slop` en CAD.
+      2. Matriz estricta de materiales y asignación obligatoria de bahías Canvas (`T0` -> Bahía A, `T1` -> Bahía B).
+      3. Criterios de aceptación de laminación (bucles de pared, relleno, brecha Z de soporte, espaciado de interfaz).
+    - **Aduana de Lanzamiento (Hard Launch Gate):** Antes de llamar a `start_print`, el agente **DEBE ejecutar obligatoriamente**:
+      ```bash
+      python3 scripts/preflight_audit.py <archivo.gcode> --passport <FABRICATION_PASSPORT.md> --live
+      ```
+      - Si el dictamen es `[FAIL]`, la orden de impresión queda **INCONDICIONALMENTE BLOQUEADA**.
+      - En trabajos multi-material (Canvas / AMS), el payload de `start_print` **DEBE incluir obligatoriamente** `use_ams=True` y `ams_mapping=[0, 1]`. Queda terminantemente prohibido iniciar trabajos multi-material sin el mapeo explícito de bahías.
 
 
 ---
@@ -149,8 +161,8 @@ Cuando el usuario interactúe contigo, identifica en qué fase se encuentra y co
 [Fase 1: Requisitos] ────────► skills/3d-grill-me/SKILL.md
        │                       (Entrevista socrática, Greenfield vs Remix, rasgos a conservar)
        ▼
-[Fase 2: Medidas & Fits] ────► skills/spec-advisor/SKILL.md
-       │                       (Datasheets, tolerancias FDM, insertos roscados M2-M5)
+[Fase 2: Diseño & Criterios] ─► skills/3d-designer/SKILL.md & skills/spec-advisor/SKILL.md
+       │                       (Emisión de FABRICATION_PASSPORT.md, datasheets, tolerancias FDM, $slop)
        ▼
 [Fase 3: Modelado 3D] ───────► ¿Mecánico u Orgánico?
        ├─────────────────────► Ruta A (Mecánico): skills/parametric-cad/SKILL.md (OpenSCAD)
@@ -161,17 +173,20 @@ Cuando el usuario interactúe contigo, identifica en qué fase se encuentra y co
        │                       scripts/generate_gallery.py (Renders PNG y visor Three.js)
        ▼
 [Fase 5: Slicer Advisor] ────► skills/slicer-advisor/SKILL.md
-       │                       (Perfiles OrcaSlicer por intención para Centauri Carbon)
+       │                       (Perfiles OrcaSlicer por intención, soporte zero-gap, prime tower)
        ▼
-[Fase 6: Control Elegoo] ────► skills/elegoo-centauri/SKILL.md
+[Fase 6: Aduana Pre-Vuelo] ──► skills/preflight-auditor/SKILL.md
+       │                       (Auditoría binaria obligatoria: G-code vs Pasaporte vs Hardware)
+       ▼
+[Fase 7: Control Elegoo] ────► skills/elegoo-centauri/SKILL.md
                                 (Monitoreo SDCP WebSocket, servidor Kiln MCP, cámara, preheat)
        │
        ▼ (Post-Impresión / Fallos)
-[Fase 7: Feedback & Print Doctor] ──► skills/print-doctor/SKILL.md
+[Fase 8: Feedback & Print Doctor] ──► skills/print-doctor/SKILL.md
                                        (Registro en print_feedback.md, diagnóstico clínico y ajustes)
        │
        ▼ (Pedagogía & Dudas)
-[Fase 8: Mentoría Didáctica] ────────► skills/3d-teach/SKILL.md
+[Fase 9: Mentoría Didáctica] ────────► skills/3d-teach/SKILL.md
                                        (Analogías simples, checkpoints de comprensión y enseñanza interactiva)
 ```
 
@@ -180,13 +195,16 @@ Cuando el usuario interactúe contigo, identifica en qué fase se encuentra y co
 ## 📁 Estructura del Repositorio
 
 - `pieces/`: Directorio canónico donde se almacenan las piezas con sus respectivos artefactos y prototipos, estructuradas rígidamente en `README.md`, `artifacts/` (artefactos finales de diseño) y `prototypes/` (ciclo de vida de prototipos draft-[N]).
+- `resources/templates/`: Plantillas normativas corporativas (`FABRICATION_PASSPORT.template.md`, etc.).
 - `skills/3d-grill-me/`: Entrevista interactiva para madurar ideas y definir características a conservar.
+- `skills/3d-designer/`: Arquitectura técnica de diseño, definición de criterios de aceptación y emisión del pasaporte de fabricación (`FABRICATION_PASSPORT.md`).
 - `skills/3d-teach/`: Pedagogía y mentoría didáctica FDM/CAD (estilo Matt Pocock teach), analogías del mundo real y checkpoints de comprensión para usuarios no expertos.
 - `skills/spec-advisor/`: Referencias de tornillería, tolerancias de encaje, propiedades de filamentos y catálogo Open Filament Database (`scripts/filament_database.py`).
 - `skills/parametric-cad/`: Plantillas OpenSCAD, guías de modelado y adaptaciones de STLs existentes.
 - `skills/blender-mcp/`: Directivas de modelado orgánico, esculturas y miniaturas vía BlenderMCP.
 - `skills/slicer-advisor/`: Recomendaciones de corte, presets de OrcaSlicer/OFD y perfiles optimizados para la Elegoo Centauri Carbon.
+- `skills/preflight-auditor/`: Auditoría aduanera previa a la fabricación (Pre-Flight Gate), validación binaria del G-code vs Pasaporte vs Hardware Elegoo Canvas.
 - `skills/elegoo-centauri/`: Scripts CLI y servidor MCP Kiln para conectar, monitorear y gobernar la Elegoo Centauri Carbon vía SDCP.
 - `skills/print-doctor/`: Diagnóstico clínico y resolución de fallos FDM (warping, stringing, heat creep).
-- `scripts/`: Herramientas de scaffolding (`scaffold_piece.py`), feedback e inspección (`feedback.py`), catálogo y presets de filamento (`filament_database.py`), verificación de entorno (`verify-environment.sh`), ingeniería inversa (`measure.py`), verificación cinemática (`sweep.py`), auditoría y autopsia de mallas (`verify_mesh.py`), empaquetado multi-material (`export_3mf.py`), probetas de calibración (`generate_coupon.py`) y generación de galería visual (`generate_gallery.py`).
+- `scripts/`: Herramientas de scaffolding (`scaffold_piece.py`, `scaffold_draft.py`), auditoría pre-vuelo (`preflight_audit.py`), feedback e inspección (`feedback.py`), catálogo y presets de filamento (`filament_database.py`), verificación de entorno (`verify-environment.sh`), ingeniería inversa (`measure.py`), verificación cinemática (`sweep.py`), auditoría y autopsia de mallas (`verify_mesh.py`), empaquetado multi-material (`export_3mf.py`), probetas de calibración (`generate_coupon.py`) y generación de galería visual (`generate_gallery.py`).
 - `config/`: Directorio de configuración local (`config.toml`, `config.example.toml` y `mcp_servers.example.json` para BlenderMCP y Kiln SDCP).
