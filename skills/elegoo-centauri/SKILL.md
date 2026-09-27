@@ -113,3 +113,18 @@ python3 skills/elegoo-centauri/scripts/centauri_ctl.py stop
 ```bash
 python3 skills/elegoo-centauri/scripts/centauri_ctl.py files
 ```
+
+---
+
+## ⏱️ Política de Frugalidad de Tokens y Monitoreo por Hitos Discretos
+
+El agente **TIENE ESTRICTAMENTE PROHIBIDO ejecutar bucles continuos de sondeo (*polling loops*)** durante la fabricación:
+1. **La máquina es autónoma:** El archivo G-code ya reside en la memoria local y la placa Klipper/CC2 ejecuta el trabajo sin supervisión activa de la IA.
+2. **Impacto en tokens:** Un bucle de sondeo cada minuto durante 45 minutos recarga ~80,000 tokens de contexto por turno, quemando más de **3.5 a 4.5 millones de tokens** sin aportar valor técnico.
+3. **Protocolo Canónico de 3 Hitos:**
+   - **Hito 1 (Fin de Calentamiento / Primera Capa ~10-12 min):** Consulta única de telemetría y captura óptica (snapshot) para verificar la adherencia (*squish*) y descartar desprendimiento temprano.
+   - **Hito 2 (Transición Crítica / Soporte Multi-Material, si aplica):** Consulta puntual tras el primer cambio de herramienta o inicio de soporte incompatible (PETG/ABS).
+   - **Hito 3 (Fin de Fabricación / Post-Print Triage):** Notificación de pieza lista, enfriamiento seguro e inicio de la inspección física (`skills/print-doctor`).
+4. **Monitoreo Local Cero Tokens (Out-of-Band):**
+   - Transmisión en vivo MJPEG: `http://<IP_IMPRESORA>:8080/?action=stream` (30 FPS en navegador).
+   - Telemetría en consola: `centauri status` o `centauri canvas`.
