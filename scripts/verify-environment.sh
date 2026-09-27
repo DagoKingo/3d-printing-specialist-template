@@ -62,6 +62,12 @@ else
   printf 'INFO %-10s %s\n' blender 'Opcional: requerido para Track B (modelado orgánico y BlenderMCP).'
 fi
 
+if command -v uvx >/dev/null 2>&1; then
+  printf 'OK   %-10s %s\n' uvx "$(uvx --version 2>&1 | head -n 1) (soporta Kiln 3D y BlenderMCP)"
+else
+  printf 'INFO %-10s %s\n' uvx 'Opcional: requerido para ejecutar servidores MCP (Kiln 3D y BlenderMCP) sin instalación.'
+fi
+
 # Verificación y auto-enlace con la plantilla base (upstream)
 CURRENT_REPO=$(git remote get-url origin 2>/dev/null || echo "")
 if [[ "$CURRENT_REPO" != *"3d-printing-specialist-template"* ]]; then

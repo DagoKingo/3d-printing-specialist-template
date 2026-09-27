@@ -53,14 +53,14 @@ Al contar con cambio automático de filamento, **queda estrictamente prohibido u
 
 ---
 
-## 4. Matriz Canónica de Ranuras Canvas (Slots)
+## 4. Matriz Canónica de Ranuras Canvas (Slots Activos)
 
-| Ranura (Slot) | Material | Color Típico | Rol Principal en Proyectos |
+| Ranura (Slot) | Material Cargado | Color | Rol Técnico en Proyectos |
 | :---: | :---: | :---: | :--- |
-| **Slot 1** | **ABS** | Gris / Negro | Piezas mecánicas estructurales de alta temperatura ($T_g \approx 105^\circ\text{C}$) |
-| **Slot 2** | **PETG** | Naranja / Blanco / Traslúcido | Flechas indicadoras de contraste / **Interfaz de soporte anti-adherente para ABS** |
-| **Slot 3** | **PLA** | Blanco / Negro | Prototipado rápido, plantillas dimensionales y probetas de calibración |
-| **Slot 4** | **PA-CF / TPU** | Negro / Especial | Materiales de alta resistencia al desgaste o empaquetaduras flexibles |
+| **Slot 1** | **ABS** | **Gris** (`#808080`) | Cuerpo mecánico estructural de alta temperatura ($T_g \approx 105^\circ\text{C}$) |
+| **Slot 2** | **PETG** | **Negro** (`#1A1A1A`) | **Interfaz de soporte anti-adherente zero-gap (Z=0.00 mm) para piezas de ABS** |
+| **Slot 3** | **PETG** | **Naranja** (`#FF6600`) | Flechas indicadoras de contraste / Insertos y detalles bicolores |
+| **Slot 4** | *(Disponible)* | — | Bahía libre para filamentos técnicos adicionales (PA-CF / TPU / PLA) |
 
 ---
 

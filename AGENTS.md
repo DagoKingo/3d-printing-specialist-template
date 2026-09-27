@@ -137,7 +137,7 @@ Cuando el usuario interactúe contigo, identifica en qué fase se encuentra y co
        │                       (Perfiles OrcaSlicer por intención para Centauri Carbon)
        ▼
 [Fase 6: Control Elegoo] ────► skills/elegoo-centauri/SKILL.md
-                               (Monitoreo SDCP WebSocket, temperaturas, luces, preheat)
+                                (Monitoreo SDCP WebSocket, servidor Kiln MCP, cámara, preheat)
        │
        ▼ (Post-Impresión / Fallos)
 [Fase 7: Feedback & Print Doctor] ──► skills/print-doctor/SKILL.md
@@ -156,12 +156,12 @@ Cuando el usuario interactúe contigo, identifica en qué fase se encuentra y co
 - `projects/`: Directorio alternativo de trabajo o proyectos compuestos.
 - `skills/3d-grill-me/`: Entrevista interactiva para madurar ideas y definir características a conservar.
 - `skills/3d-teach/`: Pedagogía y mentoría didáctica FDM/CAD (estilo Matt Pocock teach), analogías del mundo real y checkpoints de comprensión para usuarios no expertos.
-- `skills/spec-advisor/`: Referencias de tornillería, tolerancias de encaje y propiedades de filamentos.
+- `skills/spec-advisor/`: Referencias de tornillería, tolerancias de encaje, propiedades de filamentos y catálogo Open Filament Database (`scripts/filament_database.py`).
 - `skills/parametric-cad/`: Plantillas OpenSCAD, guías de modelado y adaptaciones de STLs existentes.
 - `skills/blender-mcp/`: Directivas de modelado orgánico, esculturas y miniaturas vía BlenderMCP.
-- `skills/slicer-advisor/`: Recomendaciones de corte y perfiles optimizados para la Elegoo Centauri Carbon.
-- `skills/elegoo-centauri/`: Scripts CLI para conectar y monitorear la Elegoo Centauri Carbon vía SDCP.
+- `skills/slicer-advisor/`: Recomendaciones de corte, presets de OrcaSlicer/OFD y perfiles optimizados para la Elegoo Centauri Carbon.
+- `skills/elegoo-centauri/`: Scripts CLI y servidor MCP Kiln para conectar, monitorear y gobernar la Elegoo Centauri Carbon vía SDCP.
 - `skills/print-doctor/`: Diagnóstico clínico y resolución de fallos FDM (warping, stringing, heat creep).
-- `scripts/`: Herramientas de scaffolding (`scaffold_piece.py`), feedback e inspección (`feedback.py`), verificación de entorno (`verify-environment.sh`), ingeniería inversa (`measure.py`), verificación cinemática (`sweep.py`), auditoría y autopsia de mallas (`verify_mesh.py`), empaquetado multi-material (`export_3mf.py`), probetas de calibración (`generate_coupon.py`) y generación de galería visual (`generate_gallery.py`).
+- `scripts/`: Herramientas de scaffolding (`scaffold_piece.py`), feedback e inspección (`feedback.py`), catálogo y presets de filamento (`filament_database.py`), verificación de entorno (`verify-environment.sh`), ingeniería inversa (`measure.py`), verificación cinemática (`sweep.py`), auditoría y autopsia de mallas (`verify_mesh.py`), empaquetado multi-material (`export_3mf.py`), probetas de calibración (`generate_coupon.py`) y generación de galería visual (`generate_gallery.py`).
 - `config.toml`: Configuración local (IP de la impresora, parámetros del usuario).
-- `mcp_servers.example.json`: Configuración de servidores MCP (ej. `blender-mcp`).
+- `mcp_servers.example.json`: Configuración de servidores MCP (`blender-mcp` para Track B y `kiln3d` para control autónomo de la Elegoo Centauri Carbon vía SDCP).

@@ -15,9 +15,25 @@ triggers:
   - "qué material usar"
   - "PETG o PLA"
   - "datasheet"
+  - "open filament database"
 ---
 
 # Skill: Spec Advisor (Especificaciones, Tolerancias, Uniones y Materiales)
+
+## 0. Identidad del Repositorio, Plantilla Base y Git Upstream
+
+Cualquier agente que ejecute esta skill debe reconocer de inmediato la naturaleza y límites de este repositorio:
+
+1. **Plantilla Base del Repositorio:**
+   - Este repositorio implementa la plantilla corporativa **`laga-solutions/3d-printing-specialist-template`**, formalizada en el manifiesto raíz [`template.yaml`](template.yaml).
+   - Su rol es **exclusivamente de Especialista en Fabricación Aditiva e Ingeniería CAD 3D** (`role: 3d-printing-specialist`).
+   - La skill `spec-advisor` define las tolerancias de acople, especificaciones físicas de componentes comerciales y propiedades de materiales.
+
+2. **Verificación Inmediata de Plantilla y Git Upstream:**
+   - Remote `upstream` hacia `https://github.com/DagoKingo/3d-printing-specialist-template.git`.
+   - Consulta [`template.yaml`](template.yaml) y ejecuta `./scripts/verify-environment.sh`.
+
+---
 
 Garantiza precisión dimensional, solidez estructural y física en las piezas. **Regla de oro: No inventar dimensiones de componentes comerciales ni forzar tolerancias sin calibrar.**
 
@@ -80,6 +96,22 @@ La Elegoo Centauri Carbon cuenta con cámara cerrada y hotend de 300°C con boqu
 
 ---
 
+## 🌐 Consulta de Especificaciones en Open Filament Database (OFD)
+
+Para obtener especificaciones exactas (densidad en g/cm³, tolerancias de diámetro y configuraciones recomendadas) de marcas comerciales reales (Elegoo, eSun, Polymaker, Sunlu, Bambu Lab), utiliza la herramienta CLI [`scripts/filament_database.py`](../../scripts/filament_database.py):
+
+```bash
+# 1. Buscar filamento por marca o tipo:
+python3 scripts/filament_database.py search "elegoo rapid petg"
+
+# 2. Obtener ficha técnica con densidad exacta y código de preset:
+python3 scripts/filament_database.py info elegoo PETG rapid_petg
+```
+
+> **Principio Never Guess Filament Specs:** Usa la densidad real de OFD (ej. 1.29 g/cm³ para Elegoo Rapid PETG) para cálculos precisos de masa en `manifest.json`.
+
+---
+
 ## 🔍 Ingeniería Inversa de Mallas Muestra (Reverse Engineering con `measure.py`)
 
 Si el diseño parte de un modelo `.stl` o `.3mf` existente o muestra:
@@ -128,4 +160,3 @@ Si el diseño parte de un modelo `.stl` o `.3mf` existente o muestra:
 ```
 
 Este registro garantiza que si otro agente, el usuario o tú mismo retoman la pieza semanas después, no se pierdan las cotas de ingeniería ni se repitan búsquedas en internet.
-

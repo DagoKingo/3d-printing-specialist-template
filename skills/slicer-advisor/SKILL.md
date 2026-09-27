@@ -12,9 +12,25 @@ triggers:
   - "costura"
   - "seam"
   - "soporte"
+  - "preset filamento"
 ---
 
 # Skill: Slicer Advisor (OrcaSlicer & Elegoo Centauri Carbon)
+
+## 0. Identidad del Repositorio, Plantilla Base y Git Upstream
+
+Cualquier agente que ejecute esta skill debe reconocer de inmediato la naturaleza y límites de este repositorio:
+
+1. **Plantilla Base del Repositorio:**
+   - Este repositorio implementa la plantilla corporativa **`laga-solutions/3d-printing-specialist-template`**, formalizada en el manifiesto raíz [`template.yaml`](template.yaml).
+   - Su rol es **exclusivamente de Especialista en Fabricación Aditiva e Ingeniería CAD 3D** (`role: 3d-printing-specialist`).
+   - La skill `slicer-advisor` optimiza los parámetros de corte, zonificación cosmética/mecánica y generación de proyectos `.3mf` para OrcaSlicer / Elegoo Slicer.
+
+2. **Verificación Inmediata de Plantilla y Git Upstream:**
+   - Remote `upstream` hacia `https://github.com/DagoKingo/3d-printing-specialist-template.git`.
+   - Consulta [`template.yaml`](template.yaml) y ejecuta `./scripts/verify-environment.sh`.
+
+---
 
 Optimiza los parámetros de corte (slicing) en **OrcaSlicer** o **Elegoo Slicer** en función del objetivo real de la pieza física.
 
@@ -49,6 +65,21 @@ No existe una configuración única. Clasifica la intención del usuario en una 
 - **Brim (Borde):** Activado (5 mm con holgura de 0.1 mm) para prevenir despegado de esquinas.
 - **Enfriamiento:** Mínimo (0-15%) para evitar delaminación por contracción térmica.
 - **Velocidad de pared exterior:** Reducir a 80-120 mm/s para asegurar brillo y unión molecular.
+
+---
+
+## 🖨️ Presets Oficiales de Filamento desde Open Filament Database (OFD)
+
+Para evitar desajustes térmicos o de flujo entre bobinas comerciales específicas (Elegoo, eSun, Polymaker, Sunlu), se pueden descargar presets oficiales validados por la comunidad para OrcaSlicer:
+
+```bash
+# 1. Listar presets disponibles para una marca o material:
+python3 scripts/filament_database.py list-presets --brand elegoo --material PETG
+
+# 2. Descargar el preset JSON listo para OrcaSlicer:
+python3 scripts/filament_database.py preset elegoo PETG rapid_petg -o perfiles/elegoo_rapid_petg.json
+```
+*Para importar en OrcaSlicer o Elegoo Slicer:* Abrir menú **File → Import → Import Configs...** y seleccionar el archivo JSON descargado.
 
 ---
 
@@ -151,4 +182,3 @@ Cuando la geometría de la pieza hace físicamente imposible evitar soportes baj
   - Debido a la incompatibilidad molecular entre ambos polímeros, **no existe adherencia química**.
   - Ajuste de corte: `"support_top_z_distance": "0.00"` (contacto total en Z).
   - El soporte se desprende con un ligero soplido y la cara apoyada adquiere la textura lisa de la interfaz sin desgarros ni hilos caídos.
-
