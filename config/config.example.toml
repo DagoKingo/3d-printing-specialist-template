@@ -13,10 +13,13 @@ enclosed_chamber = true
 max_nozzle_temp = 300  # °C
 max_bed_temp = 110     # °C
 
-# Parámetros de conexión de red (SDCP WebSocket)
+# Parámetros de conexión de red (SDCP WebSocket para CC1 / MQTT para CC2)
 # Modifica con la IP asignada a tu Centauri en tu red WiFi/Ethernet
 ip = "192.168.1.100"
 sdcp_port = 3030
+mqtt_port = 1883
+access_code = ""       # Código de Acceso / LAN PIN de la pantalla (requerido para CC2)
+mainboard_id = ""      # ID de placa base (auto-detectado)
 
 [slicer]
 preferred = "OrcaSlicer" # Opciones: "OrcaSlicer", "Elegoo Slicer", "PrusaSlicer", "BambuStudio"

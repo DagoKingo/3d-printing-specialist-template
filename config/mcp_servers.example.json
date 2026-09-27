@@ -1,5 +1,15 @@
 {
   "mcpServers": {
+    "centauri": {
+      "command": "python3",
+      "args": ["-m", "pycentauri.mcp", "--enable-control"],
+      "env": {
+        "PYCENTAURI_HOST": "192.168.0.154",
+        "PYCENTAURI_ACCESS_CODE": "TU_CODIGO_LAN",
+        "PYCENTAURI_ENABLE_CONTROL": "1"
+      },
+      "description": "Servidor MCP nativo para Elegoo Centauri Carbon 1 y 2 con soporte de sistema multi-material Canvas (MQTT / SDCP / Webcam)"
+    },
     "blender": {
       "command": "uvx",
       "args": ["blender-mcp"],
@@ -9,10 +19,10 @@
       "command": "uvx",
       "args": ["--from", "kiln3d", "kiln", "serve"],
       "env": {
-        "KILN_PRINTER_HOST": "192.168.1.50",
+        "KILN_PRINTER_HOST": "192.168.0.154",
         "KILN_PRINTER_TYPE": "elegoo"
       },
-      "description": "Servidor MCP autónomo para control, telemetría, cámara, seguridad y slicing para la Elegoo Centauri Carbon (SDCP) y flotas 3D"
+      "description": "Servidor MCP autónomo para control, telemetría, seguridad y slicing para flotas 3D"
     }
   }
 }
