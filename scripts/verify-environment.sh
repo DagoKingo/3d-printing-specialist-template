@@ -20,6 +20,14 @@ else
   printf 'WARN %-10s %s\n' 'manifest' 'Falta archivo template.yaml en la raíz del repositorio.'
 fi
 
+# Verificación de Perfil de Máquina Receptor (PRINTER.md)
+if [ -f "PRINTER.md" ]; then
+  PRINTER_NAME=$(grep -E 'Modelo Comercial Exacto' PRINTER.md | awk -F'|' '{print $3}' | tr -d '*' | xargs || echo "Elegoo CC2")
+  printf 'OK   %-10s %s\n' 'printer' "PRINTER.md ($PRINTER_NAME)"
+else
+  printf 'WARN %-10s %s\n' 'printer' 'Falta artefacto PRINTER.md en la raíz del repositorio.'
+fi
+
 check git 'Instala Git y vuelve a ejecutar.'
 check python3 'Se requiere Python 3.10 o posterior para el pipeline de análisis 3D.'
 

@@ -33,14 +33,16 @@ boundaries:
     - "Overhang Structural Integrity: Prohibido sacrificar aplastamiento (squish) o generar spaghetti en voladizos bajo pretexto de baja estética (Regla 13)"
     - "Socratic Teaching: Obligatorio traducir conceptos a analogías cotidianas y verificar comprensión del usuario (Regla 14)"
 
-# Hardware de referencia predeterminado
+# Hardware de referencia predeterminado y perfil de máquina
 target_hardware:
-  printer: "Elegoo Centauri Carbon"
+  printer: "Elegoo Centauri Carbon 2"
+  multimaterial_system: "Elegoo Canvas (4 slots)"
   kinematics: "CoreXY"
   build_volume_mm: [256, 256, 256]
   max_hotend_temp_c: 300
   nozzle_default_mm: 0.4
   slicers: ["OrcaSlicer", "Elegoo Slicer"]
+  machine_profile_artifact: "PRINTER.md"
 
 # Script canónico de verificación de entorno y upstream
 verification_script: "scripts/verify-environment.sh"

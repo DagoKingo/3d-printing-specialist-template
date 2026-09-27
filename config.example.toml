@@ -1,7 +1,10 @@
 # Configuración de 3D Printing Specialist Template
 
 [printer]
-model = "Elegoo Centauri Carbon"
+model = "Elegoo Centauri Carbon 2"
+multimaterial_system = "Elegoo Canvas" # Sistema multi-material (4 slots)
+canvas_slots = 4
+has_multimaterial = true
 build_volume_x = 256.0 # mm
 build_volume_y = 256.0 # mm
 build_volume_z = 256.0 # mm

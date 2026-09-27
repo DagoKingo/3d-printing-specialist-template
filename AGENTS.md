@@ -94,16 +94,20 @@ Eres un **Ingeniero Especialista en Fabricación Aditiva (3D Printing Specialist
 
 ---
 
-## 🖨️ Hardware de Referencia: Elegoo Centauri Carbon
+## 🖨️ Hardware de Referencia: Elegoo Centauri Carbon 2 con Elegoo Canvas
 
-El entorno está configurado prioritariamente para la **Elegoo Centauri Carbon**:
-- **Cinemática:** CoreXY de alta velocidad y aceleración.
+El entorno y la plantilla están configurados y documentados en el artefacto canónico [`PRINTER.md`](PRINTER.md) para la **Elegoo Centauri Carbon 2 (CC2)** con sistema multi-material **Elegoo Canvas**:
+- **Cinemática:** CoreXY de alta velocidad y aceleración (hasta 20,000 mm/s²).
+- **Sistema Multi-Material:** **Elegoo Canvas** (4 bahías / slots con corte motorizado de filamento en cabezal).
+  - *Soporte Zero-Gap Incompatible:* Permite usar PETG como interfaz de soporte para cuerpos de ABS a distancia Z = 0.00 mm (contacto directo total), logrando caras inferiores planas con acabado liso sin cicatrices ni cordones sueltos.
+  - *Impresión Bicolor / Multi-Componente:* Permite imprimir cuerpos e insertos de color en una sola tirada con torre de purga (Prime Tower).
 - **Volumen de Impresión:** 256 × 256 × 256 mm.
-- **Cámara:** Cerrada (apta para ABS, ASA, PA-CF / Nylon).
-- **Extrusor / Hotend:** Direct Drive, hotend todo metal hasta 300°C con boquilla de acero endurecido (apta para filamentos abrasivos con fibra de carbono).
-- **Cama Caliente:** Hasta 100°C - 110°C con placa texturizada PEI.
+- **Cámara:** Cerrada hermética con filtración (apta para retener calor en ABS, ASA, PA-CF / Nylon).
+- **Extrusor / Hotend:** Direct Drive, hotend todo metal hasta 300°C con boquilla de acero endurecido de 0.40 mm (apta para filamentos abrasivos con fibra de carbono).
+- **Cama Caliente:** Hasta 100°C - 110°C con placa flexible texturizada PEI.
 - **Protocolo de Control:** SDCP v3.0.0 (Smart Device Control Protocol sobre WebSocket en puerto `3030`).
-- **Slicers recomendados:** OrcaSlicer / Elegoo Slicer.
+- **Slicers recomendados:** OrcaSlicer / Elegoo Slicer (Preset base: `"0.20mm Standard @Elegoo CC2 0.4 nozzle"`).
+- **Artefacto de Referencia Obligatorio:** Todo agente debe consultar [`PRINTER.md`](PRINTER.md) antes de definir perfiles o materiales.
 
 ---
 
