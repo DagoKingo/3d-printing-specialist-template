@@ -7,7 +7,9 @@ Crea el directorio 'pieces/<nombre_pieza>/' con su código CAD inicial, ficha t�
 import sys
 import os
 import argparse
+import time
 import re
+from scaffold_draft import scaffold_draft
 
 def sanitize_name(name):
     # Convertir a minúsculas y reemplazar espacios o caracteres inválidos por guiones bajos
@@ -137,6 +139,7 @@ if (RENDER == "preview" || RENDER == "cuerpo") {{
 | [`viewer.html`](./viewer.html) | Visor 3D interactivo en navegador | ⏳ Pendiente de generar |
 | [`renders/`](./renders/) | Capturas multiángulo PNG (isométrica, planta, frontal) | ⏳ Pendiente de capturar |
 | [`print_feedback.md`](./print_feedback.md) | Control de calidad, feedback post-impresión y prescripción clínica (Print Doctor) | ⏳ Pendiente de imprimir |
+| [`prototypes/`](./prototypes/) | Directorio de iteraciones, pruebas físicas y evaluaciones (drafts) | 📁 Estructurado |
 
 ---
 
@@ -224,10 +227,14 @@ python3 scripts/feedback.py pieces/{clean_name} --status PASS --notes "Impresió
     with open(feedback_path, "w", encoding="utf-8") as f:
         f.write(feedback_content)
 
+    # 4. Inicializar draft-1 en prototypes/
+    scaffold_draft(piece_dir, 1, goal="Primer prototipo funcional de validación dimensional y mecánica.", target_device=target_device)
+
     print(f"✨ Estructura de pieza creada exitosamente en: pieces/{clean_name}/")
     print(f"  ├── {clean_name}.scad (Modelo paramétrico)")
     print(f"  ├── README.md (Ficha técnica y lista de artefactos)")
     print(f"  ├── print_feedback.md (Ficha de inspección y feedback Print Doctor)")
+    print(f"  ├── prototypes/draft-1/ (Primer borrador/prueba física con EVALUATION.md)")
     print(f"  └── renders/ (Directorio de vistas previas)")
 
     return piece_dir

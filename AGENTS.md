@@ -35,17 +35,30 @@ Eres un **Ingeniero Especialista en Fabricación Aditiva (3D Printing Specialist
 7. **Preferencia Imperativa por `tgrep` sobre `grep`:**
    - Al realizar búsquedas de texto, patrones, símbolos o expresiones regulares en archivos del proyecto mediante la ejecución de comandos de terminal, el agente **DEBE preferir imperativamente `tgrep` antes que `grep`**.
    - **Validación obligatoria:** Antes de ejecutarlo, debe validar si está instalado en el sistema (`command -v tgrep >/dev/null 2>&1` o `which tgrep`). Si está disponible en el entorno, usar `tgrep <patrón> [ruta]`; únicamente en caso de no encontrarse instalado, utilizar `grep` (o `rg`) como fallback.
-8. **Estructura Canónica de Piezas y Artefactos (`pieces/`):**
-   - Toda pieza modelada, adaptada o validada **DEBE** residir en su propia carpeta en `pieces/<nombre_pieza>/` conteniendo su ciclo de vida y artefactos completos:
+8. **Estructura Canónica de Piezas, Prototipos e Iteraciones (`pieces/`):**
+   - Toda pieza modelada, adaptada o validada **DEBE** residir en su propia carpeta en `pieces/<nombre_pieza>/` conteniendo su ciclo de vida y artefactos canónicos:
      1. `<nombre_pieza>.scad` (Código CAD paramétrico editable).
      2. `<nombre_pieza>.stl` (Malla validada, Z-up, Z=0).
-     3. `<nombre_pieza>.3mf` (Proyecto empaquetado para OrcaSlicer con perfiles Centauri).
+     3. `<nombre_pieza>.3mf` (Proyecto final empaquetado para OrcaSlicer con perfiles Centauri).
      4. `manifest.json` (Auditoría técnica y certificado de Printability Gate).
      5. `viewer.html` (Visor web Three.js interactivo para inspección en navegador).
      6. `renders/` (Capturas PNG multiángulo: iso, top, front).
      7. `README.md` (Ficha técnica con cotas, material y parámetros de corte).
-     8. `print_feedback.md` (Ficha de inspección física, control de calidad y prescripción clínica con Print Doctor).
-   - Usa `scripts/scaffold_piece.py <nombre_pieza> --material <MAT>` para inicializar la estructura automáticamente.
+     8. `print_feedback.md` (Bitácora consolidada de control de calidad y prescripción clínica Print Doctor).
+     9. `prototypes/` (Directorio canónico de iteraciones, pruebas físicas y experimentos de corte).
+   - **Gestión Canónica de Iteraciones y Drafts (`pieces/<pieza>/prototypes/draft-[N]/`):**
+     - Toda prueba física, iteración previa, ajuste de corte o prototipo experimental **DEBE** confinarse estrictamente bajo `pieces/<nombre_pieza>/prototypes/draft-[draftNumber]/` (ej. `draft-1/`, `draft-2/`, `draft-3/`). Queda terminantemente prohibido almacenar archivos de prueba en carpetas del sistema (`Downloads`, `/tmp`, etc.) o sueltos en la raíz.
+     - **Artefacto Obligatorio de Evaluación (`EVALUATION.md`):**
+       En cada carpeta `draft-[draftNumber]/` es **OBLIGATORIO** generar y mantener un artefacto `EVALUATION.md` que documente con rigor técnico:
+       1. **🎯 Objetivo e Hipótesis:** Qué se buscaba validar en este intento (e.g. tolerancia de eje, adherencia de interfaz PETG/ABS, ensamble modular).
+       2. **✅ En qué acertó (Successes):** Geometrías que cumplieron tolerancia, acoples exitosos, rigidez lograda y aspectos funcionales validados.
+       3. **❌ En qué falló (Failures):** Defectos físicos observados (spaghetti, holguras, delaminación, marcas de soporte, apriete).
+       4. **🔬 Diagnóstico y Causa Raíz Física:** Mecanismo causal exacto (e.g. brecha Z de soporte excesiva, doble compensación de corte, sobrecalentamiento).
+       5. **📋 Acciones Prescritas para el Siguiente Draft:** Correcciones concretas en CAD (`.scad`), Slicer (`.3mf`) o preparación física.
+       6. **📸 Evidencia Fotográfica y Análisis Visual (`evidence/`):** Directorio de imágenes reales de la pieza fabricada con llamadas explicativas en el texto.
+     - Cada carpeta de draft debe albergar además sus archivos de corte y modelos asociados (`.3mf`, `.stl`, `.scad` variantes).
+   - Usa `scripts/scaffold_piece.py <nombre_pieza> --material <MAT>` para inicializar la estructura y su `draft-1/`.
+   - Usa `scripts/scaffold_draft.py pieces/<nombre_pieza> <draft_number>` para generar nuevas iteraciones con su plantilla `EVALUATION.md` y carpeta `evidence/`.
 9. **Empaquetado Nativo 3MF para Elegoo Slicer / OrcaSlicer (`scripts/export_3mf.py`):**
    - Todo archivo `.3mf` generado o actualizado **DEBE** construirse usando `scripts/export_3mf.py` para garantizar la compatibilidad estricta con el motor C++ de ElegooSlicer:
      - **Tipado estricto de strings:** Todo valor escalar en `project_settings.config` DEBE ser string (ej. `"enable_support": "1"`, `"wall_loops": "6"`, `"xy_hole_compensation": "0.15"`). Los tipos numéricos activan `invalid json type` en `src/libslic3r/Config.cpp:1004` y son descartados silenciosamente por el slicer.
