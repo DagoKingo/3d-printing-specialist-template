@@ -28,6 +28,15 @@ else
   printf 'WARN %-10s %s\n' 'printer' 'Falta artefacto PRINTER.md en la raíz del repositorio.'
 fi
 
+# Verificación de Configuración Local (config/config.toml)
+if [ -f "config/config.toml" ] || [ -f "config.toml" ]; then
+  CONFIG_FILE="config/config.toml"
+  [ -f "config.toml" ] && [ ! -f "config/config.toml" ] && CONFIG_FILE="config.toml"
+  printf 'OK   %-10s %s\n' 'config' "$CONFIG_FILE"
+elif [ -f "config/config.example.toml" ]; then
+  printf 'INFO %-10s %s\n' 'config' 'config/config.example.toml disponible (personaliza creando config/config.toml)'
+fi
+
 check git 'Instala Git y vuelve a ejecutar.'
 check python3 'Se requiere Python 3.10 o posterior para el pipeline de análisis 3D.'
 

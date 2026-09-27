@@ -51,4 +51,4 @@ Añade la entrada correspondiente en tu configuración local de MCP o en `~/.gem
   }
 }
 ```
-Consulta el archivo [`mcp_servers.example.json`](file:///home/dago/repos/3d-printing-specialist-template/mcp_servers.example.json) en la raíz de este repositorio.
+Consulta el archivo [`config/mcp_servers.example.json`](config/mcp_servers.example.json).

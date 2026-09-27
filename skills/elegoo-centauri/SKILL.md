@@ -38,7 +38,7 @@ Permite al agente o al usuario interactuar directamente con la **Elegoo Centauri
 ## 📡 Parámetros de Red
 
 - **Protocolo:** WebSocket SDCP (`ws://<IP_IMPRESORA>:3030/websocket`).
-- **Configuración de IP:** Se define en `config.toml` (o variable de entorno `ELEGOO_PRINTER_IP` / `KILN_PRINTER_HOST`).
+- **Configuración de IP:** Se define en `config/config.toml` (o variable de entorno `ELEGOO_PRINTER_IP` / `KILN_PRINTER_HOST`).
 - **Descubrimiento de MainboardID:** Auto-descubrimiento en la primera conexión.
 
 ---
@@ -47,7 +47,7 @@ Permite al agente o al usuario interactuar directamente con la **Elegoo Centauri
 
 [Kiln](https://github.com/codeofaxel/Kiln) es un servidor MCP open-source que implementa control nativo para la Elegoo Centauri Carbon sobre SDCP sin requerir autenticación.
 
-### 1. Configuración MCP (`mcp_servers.json`)
+### 1. Configuración MCP (`config/mcp_servers.example.json`)
 Agrega la configuración en tu entorno de agentes (Claude, Antigravity, etc.):
 ```json
 {

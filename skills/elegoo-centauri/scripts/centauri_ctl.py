@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 centauri_ctl.py — CLI de control para la Elegoo Centauri Carbon vía SDCP WebSocket.
-Lee la IP de config.toml o de la variable de entorno ELEGOO_PRINTER_IP.
+Lee la IP de config/config.toml o de la variable de entorno ELEGOO_PRINTER_IP.
 """
 
 import sys
@@ -23,9 +23,14 @@ except ImportError:
 def load_printer_config():
     ip = os.environ.get("ELEGOO_PRINTER_IP", "192.168.1.100")
     port = int(os.environ.get("ELEGOO_WS_PORT", "3030"))
-    config_path = os.path.join(os.path.dirname(__file__), "../../../config.toml")
+    repo_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../.."))
+    candidates = [
+        os.path.join(repo_root, "config", "config.toml"),
+        os.path.join(repo_root, "config.toml"),
+    ]
     
-    if os.path.exists(config_path):
+    config_path = next((p for p in candidates if os.path.exists(p)), None)
+    if config_path:
         try:
             with open(config_path, "r", encoding="utf-8") as f:
                 for line in f:

@@ -11,9 +11,6 @@ venv/
 *.3mf.temp
 *.stl.temp
 
-# Proyectos locales no rastreados (opcional)
-# projects/*
-# !projects/.gitkeep
 
 # IDE y Sistema
 .DS_Store

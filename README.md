@@ -62,8 +62,10 @@ Plantilla y marco de trabajo asistido por IA para concebir, diseñar, validar y 
 ├── AGENTS.md                   # Instrucciones maestras para cualquier agente de IA
 ├── CLAUDE.md                   # Puntero para Claude Code
 ├── GEMINI.md                   # Puntero para Gemini CLI / Antigravity
-├── config.toml                 # Configuración de impresora (IP, volumen) y slicer
-├── mcp_servers.example.json    # Configuración de servidores MCP (BlenderMCP y Kiln MCP para Elegoo Centauri Carbon)
+├── config/                     # Configuraciones locales y servidores MCP
+│   ├── config.toml             # Configuración de impresora (IP, volumen) y slicer (creado desde .example)
+│   ├── config.example.toml     # Plantilla de configuración de impresora y slicer
+│   └── mcp_servers.example.json# Configuración de servidores MCP (BlenderMCP y Kiln MCP)
 ├── requirements.txt            # Dependencias Python opcionales
 │
 ├── skills/
@@ -136,7 +138,7 @@ uvx blender-mcp
 # Servidor MCP para control, cámara y telemetría de Elegoo Centauri Carbon
 uvx --from kiln3d kiln serve
 ```
-Consulta [`mcp_servers.example.json`](file:///home/dago/repos/3d-printing-specialist-template/mcp_servers.example.json) y [`skills/blender-mcp/references/mcp_setup.md`](file:///home/dago/repos/3d-printing-specialist-template/skills/blender-mcp/references/mcp_setup.md).
+Consulta [`config/mcp_servers.example.json`](config/mcp_servers.example.json) y [`skills/blender-mcp/references/mcp_setup.md`](skills/blender-mcp/references/mcp_setup.md).
 
 ### 3. Dependencias Python (Recomendado)
 Para el cliente de comunicación con la impresora y validación de mallas:

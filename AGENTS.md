@@ -178,5 +178,4 @@ Cuando el usuario interactúe contigo, identifica en qué fase se encuentra y co
 - `skills/elegoo-centauri/`: Scripts CLI y servidor MCP Kiln para conectar, monitorear y gobernar la Elegoo Centauri Carbon vía SDCP.
 - `skills/print-doctor/`: Diagnóstico clínico y resolución de fallos FDM (warping, stringing, heat creep).
 - `scripts/`: Herramientas de scaffolding (`scaffold_piece.py`), feedback e inspección (`feedback.py`), catálogo y presets de filamento (`filament_database.py`), verificación de entorno (`verify-environment.sh`), ingeniería inversa (`measure.py`), verificación cinemática (`sweep.py`), auditoría y autopsia de mallas (`verify_mesh.py`), empaquetado multi-material (`export_3mf.py`), probetas de calibración (`generate_coupon.py`) y generación de galería visual (`generate_gallery.py`).
-- `config.toml`: Configuración local (IP de la impresora, parámetros del usuario).
-- `mcp_servers.example.json`: Configuración de servidores MCP (`blender-mcp` para Track B y `kiln3d` para control autónomo de la Elegoo Centauri Carbon vía SDCP).
+- `config/`: Directorio de configuración local (`config.toml`, `config.example.toml` y `mcp_servers.example.json` para BlenderMCP y Kiln SDCP).
