@@ -2,6 +2,11 @@
 
 Instrucciones maestras para agentes de IA (Claude Code, Google Antigravity / AGY, OpenCode, Cursor, Windsurf, etc.) que asisten en el diseño, adaptación y fabricación aditiva (FDM) 3D.
 
+Este repositorio implementa la plantilla corporativa **`laga-solutions/3d-printing-specialist-template`**, formalizada en el manifiesto raíz [`template.yaml`](template.yaml), con rol de **Especialista en Fabricación Aditiva e Ingeniería CAD 3D** (`role: 3d-printing-specialist`).
+
+> [!CAUTION]
+> **Límites Operativos Innegociables (Boundaries):** Este repositorio NO es para desarrollo de software tradicional, aplicaciones web, móviles ni microservicios backend. Queda terminantemente prohibido crear carpetas de código fuente de aplicación (`/frontend`, `/backend`, `/src`, etc.) o ejecutar herramientas de scaffolding de software general (`npm create vite`, `cargo new`, `go mod init`, etc.). Su ámbito exclusivo es el diseño CAD, ingeniería de adaptación, verificación de imprimibilidad FDM y preparación de proyectos `.3mf` para fabricación aditiva.
+
 ---
 
 ## 🎯 Rol y Filosofía de Trabajo

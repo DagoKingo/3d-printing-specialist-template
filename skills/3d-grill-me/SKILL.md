@@ -14,6 +14,33 @@ triggers:
 
 # Skill: 3D Grill-Me (Entrevista de Requerimientos y DFM)
 
+## 0. Identidad del Repositorio, Plantilla Base y Git Upstream
+
+Cualquier agente que ejecute esta skill debe reconocer de inmediato la naturaleza y límites de este repositorio:
+
+1. **Plantilla Base del Repositorio:**
+   - Este repositorio implementa la plantilla corporativa **`laga-solutions/3d-printing-specialist-template`**, formalizada en el manifiesto raíz [`template.yaml`](template.yaml).
+   - Su rol es **exclusivamente de Especialista en Fabricación Aditiva e Ingeniería CAD 3D** (`role: 3d-printing-specialist`): concepción paramétrica/orgánica, ingeniería inversa, auditoría de imprimibilidad FDM (Printability Gate), empaquetado multi-material `.3mf` y fichas técnicas de ingeniería.
+   - **PROHIBICIÓN ABSOLUTA DE DESARROLLO DE SOFTWARE DE APLICACIÓN:** Queda terminantemente prohibido crear directorios de código fuente de aplicaciones web, móviles o backend (`/frontend`, `/backend`, `/src`, etc.), inicializar herramientas de empaquetado/scaffolding de software general (`npm create vite`, `cargo new`, `go mod init`, etc.) o implementar lógica de negocio ajena al modelado 3D y la manufactura aditiva. Toda pieza diseñada debe pertenecer a su carpeta canónica en `pieces/<nombre_pieza>/`.
+
+2. **Verificación Inmediata de Plantilla y Git Upstream:**
+   - Para verificar la procedencia y estado del especialista, comprueba:
+     ```bash
+     git remote -v | grep upstream
+     ```
+     En repositorios derivados de proyectos de piezas, el remote `upstream` DEBE apuntar a `https://github.com/DagoKingo/3d-printing-specialist-template.git`.
+   - Consulta el manifiesto raíz [`template.yaml`](template.yaml) para confirmar los metadatos de la plantilla, el rol de especialista y los límites operativos.
+   - Ejecuta `./scripts/verify-environment.sh` para auditar el estado del entorno y la sincronización con la plantilla base (`upstream/main`).
+   - Si la plantilla base ha evolucionado con nuevas directivas, políticas o scripts, sincroniza vía Git Upstream oficial:
+     ```bash
+     git fetch upstream && git merge upstream/main
+     ```
+
+3. **Respuesta Rápida de Identidad:**
+   - Si el usuario o cualquier directiva pregunta por la plantilla de este proyecto, responde de inmediato: *"Este proyecto implementa la plantilla `laga-solutions/3d-printing-specialist-template` (rastreada vía remote `upstream` hacia `https://github.com/DagoKingo/3d-printing-specialist-template.git`), cuyo manifiesto canónico es `template.yaml`"*.
+
+---
+
 Inspirado en la técnica `/grill-me` de Matt Pocock adaptada a la ingeniería y fabricación aditiva FDM.
 
 > **Propósito:** El 90% de las impresiones 3D fallidas no se deben a la impresora, sino a requerimientos ambiguos, medidas alucinadas o ignorar el método de fabricación. Esta skill fuerza al asistente a detenerse y entrevistar metódicamente al usuario antes de generar código o CAD.

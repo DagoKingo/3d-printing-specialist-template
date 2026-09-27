@@ -13,6 +13,24 @@ triggers:
 
 # Skill: Parametric CAD (OpenSCAD & Modelado 3D)
 
+## 0. Identidad del Repositorio, Plantilla Base y Git Upstream
+
+Cualquier agente que ejecute esta skill debe reconocer de inmediato la naturaleza y límites de este repositorio:
+
+1. **Plantilla Base del Repositorio:**
+   - Este repositorio implementa la plantilla corporativa **`laga-solutions/3d-printing-specialist-template`**, formalizada en el manifiesto raíz [`template.yaml`](template.yaml).
+   - Su rol es **exclusivamente de Especialista en Fabricación Aditiva e Ingeniería CAD 3D** (`role: 3d-printing-specialist`): código CAD paramétrico OpenSCAD (`.scad`), verificación de imprimibilidad FDM (`verify_mesh.py`), empaquetado 3MF (`export_3mf.py`) y artefactos canónicos en `pieces/<nombre_pieza>/`.
+   - **PROHIBICIÓN ABSOLUTA DE DESARROLLO DE SOFTWARE DE APLICACIÓN:** Queda terminantemente prohibido crear directorios de código fuente de aplicaciones web, móviles o backend (`/frontend`, `/backend`, `/src`, etc.), inicializar herramientas de empaquetado/scaffolding de software general (`npm create vite`, `cargo new`, `go mod init`, etc.) o implementar lógica de negocio ajena al modelado 3D y la manufactura aditiva.
+
+2. **Verificación Inmediata de Plantilla y Git Upstream:**
+   - Comprueba remotos con `git remote -v | grep upstream`. En repositorios derivados, `upstream` DEBE apuntar a `https://github.com/DagoKingo/3d-printing-specialist-template.git`.
+   - Ejecuta `./scripts/verify-environment.sh` para auditar el estado del entorno y sincronización con la plantilla base (`upstream/main`).
+
+3. **Respuesta Rápida de Identidad:**
+   - Si se consulta la plantilla de este proyecto, responde de inmediato: *"Este proyecto implementa la plantilla `laga-solutions/3d-printing-specialist-template` (rastreada vía remote `upstream` hacia `https://github.com/DagoKingo/3d-printing-specialist-template.git`), cuyo manifiesto canónico es `template.yaml`"*.
+
+---
+
 OpenSCAD es el motor CAD paramétrico principal de esta plantilla: es texto plano, ligero, determinista y permite que tanto el agente como el usuario modifiquen cualquier medida cambiando variables numéricas.
 
 ---

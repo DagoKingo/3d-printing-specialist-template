@@ -1,0 +1,44 @@
+# ==============================================================================
+# Identidad de Plantilla y Configuración del Repositorio (LAGA Solutions)
+# ==============================================================================
+# Este manifiesto formaliza la identidad arquitectónica de este repositorio como
+# la plantilla canónica '3d-printing-specialist-template'. Cualquier agente o
+# desarrollador que opere en este repositorio debe consultar este archivo como
+# fuente canónica de identidad, capacidades y límites de responsabilidad.
+# ==============================================================================
+
+template: "laga-solutions/3d-printing-specialist-template"
+upstream: "https://github.com/DagoKingo/3d-printing-specialist-template.git"
+role: "3d-printing-specialist"
+description: "Marco de trabajo y plantilla canónica para ingeniería de diseño CAD (paramétrico y orgánico), adaptación de piezas (remix), auditoría de imprimibilidad FDM (Printability Gate) y empaquetado 3MF para manufactura aditiva."
+
+# Límites operativos innegociables del Especialista 3D
+boundaries:
+  # Prohibición absoluta de desarrollo de software de aplicación / web / microservicios
+  allow_software_application_code: false
+  allow_build_artifacts: false
+  prohibited_actions:
+    - "Creación de carpetas de código fuente de aplicaciones web, móviles o backend (/frontend, /backend, /src, /api, etc.)"
+    - "Scaffolding de frameworks de desarrollo de software (npm create, vite, cargo init, go mod init, etc.)"
+    - "Instalación de dependencias de runtime de aplicaciones de software general"
+    - "Modificación de archivos fuera del ámbito de piezas 3D, utilidades de pipeline o fichas técnicas de ingeniería"
+
+  # Principios de ingeniería y fabricación aditiva inquebrantables
+  engineering_guardrails:
+    - "Never Guess Dimensions: Prohibido modelar piezas de acople comercial sin consultar datasheets o cotas de calibre"
+    - "Part Number Locking: Prohibido truncar, abreviar o generalizar modelos de hardware receptor (Regla 10)"
+    - "Printability Gate: Prohibido emitir mallas no-manifold o piezas no apoyadas en Z=0 sin auditar vía verify_mesh.py"
+    - "Canonical Piece Artifacts: Toda pieza debe residir en pieces/<nombre_pieza>/ con sus 7 artefactos completos"
+    - "Native 3MF Packaging: Todo proyecto 3MF debe cumplir tipado estricto de strings vía scripts/export_3mf.py"
+
+# Hardware de referencia predeterminado
+target_hardware:
+  printer: "Elegoo Centauri Carbon"
+  kinematics: "CoreXY"
+  build_volume_mm: [256, 256, 256]
+  max_hotend_temp_c: 300
+  nozzle_default_mm: 0.4
+  slicers: ["OrcaSlicer", "Elegoo Slicer"]
+
+# Script canónico de verificación de entorno y upstream
+verification_script: "scripts/verify-environment.sh"

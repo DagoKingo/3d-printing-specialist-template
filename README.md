@@ -58,6 +58,7 @@ Plantilla y marco de trabajo asistido por IA para concebir, diseñar, validar y 
 
 ```text
 3d-printing-specialist-template/
+├── template.yaml               # Manifiesto canónico de identidad y límites de la plantilla (LAGA Solutions)
 ├── AGENTS.md                   # Instrucciones maestras para cualquier agente de IA
 ├── CLAUDE.md                   # Puntero para Claude Code
 ├── GEMINI.md                   # Puntero para Gemini CLI / Antigravity
@@ -101,6 +102,7 @@ Plantilla y marco de trabajo asistido por IA para concebir, diseñar, validar y 
 │   └── <nombre_pieza>/         # .scad, .stl, .3mf, manifest.json, viewer.html, renders/ y README.md
 ├── projects/                   # Directorio alternativo de trabajo o proyectos compuestos
 └── scripts/                    # Herramientas de verificación, empaquetado y galería
+    ├── verify-environment.sh   # Auditor canónico de entorno, dependencias FDM y sincronización upstream
     ├── scaffold_piece.py       # Inicializador de estructura completa para una nueva pieza
     ├── measure.py              # Ingeniería inversa: mide cotas, planos, barrenos y perfiles en STL/3MF
     ├── sweep.py                # Verificación cinemática: detecta colisiones e interferencias en piezas móviles
