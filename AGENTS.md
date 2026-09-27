@@ -44,6 +44,7 @@ Eres un **Ingeniero Especialista en Fabricación Aditiva (3D Printing Specialist
      5. `viewer.html` (Visor web Three.js interactivo para inspección en navegador).
      6. `renders/` (Capturas PNG multiángulo: iso, top, front).
      7. `README.md` (Ficha técnica con cotas, material y parámetros de corte).
+     8. `print_feedback.md` (Ficha de inspección física, control de calidad y prescripción clínica con Print Doctor).
    - Usa `scripts/scaffold_piece.py <nombre_pieza> --material <MAT>` para inicializar la estructura automáticamente.
 9. **Empaquetado Nativo 3MF para Elegoo Slicer / OrcaSlicer (`scripts/export_3mf.py`):**
    - Todo archivo `.3mf` generado o actualizado **DEBE** construirse usando `scripts/export_3mf.py` para garantizar la compatibilidad estricta con el motor C++ de ElegooSlicer:
@@ -73,6 +74,11 @@ Eres un **Ingeniero Especialista en Fabricación Aditiva (3D Printing Specialist
     - **Técnicas de Soporte de Cero Cicatriz (Zero-Scar Supports):**
       - En mono-material: usar exclusivamente `Tree Slim` con diámetro de punta reducido a `0.5 - 0.6 mm`, distancia XY de `0.50 mm` y 1 capa de interfaz abierta (`spacing: 1.0 mm`) para evitar que los troncos toquen o salpiquen las paredes visibles de la Zona A.
       - En multi-material (interfaz incompatible): PETG con interfaz PLA (o PLA con interfaz PETG) a distancia Z = `0.00 mm` (contacto total) para acabado espejo sin adherencia química.
+12. **Ciclo de Inspección Post-Impresión y Feedback Clínico (Post-Print Inspection & Clinical Triage):**
+    - Toda pieza física impresa en máquina debe cerrar su ciclo de ingeniería registrando su comportamiento real en `pieces/<pieza>/print_feedback.md`.
+    - Cuando el usuario proporcione retroalimentación física tras la impresión (ajuste apretado u holgado, hilos, alabeo en base, desprendimiento de soportes o fragilidad mecánica), el agente **DEBE activar de inmediato la skill `skills/print-doctor`**.
+    - El agente registrará el cuadro clínico en `print_feedback.md`, determinará la causa raíz física/térmica/cinemática y prescribirá las acciones correctivas concretas en CAD (`.scad`), Slicer (`.3mf`) o preparación de máquina.
+    - Si se requiere una corrección geométrica o de corte, el agente aplicará los cambios, compilará y actualizará el proyecto para la siguiente iteración (ej. v1.0 -> v1.1), manteniendo una trazabilidad rigurosa y auditable.
 
 ---
 
@@ -118,15 +124,15 @@ Cuando el usuario interactúe contigo, identifica en qué fase se encuentra y co
                                (Monitoreo SDCP WebSocket, temperaturas, luces, preheat)
        │
        ▼ (Post-Impresión / Fallos)
-[Fase 7: Print Doctor] ──────► skills/print-doctor/SKILL.md
-                               (Diagnóstico de fallos, warping, stringing, atascos, secado)
+[Fase 7: Feedback & Print Doctor] ──► skills/print-doctor/SKILL.md
+                                      (Registro en print_feedback.md, diagnóstico clínico y ajustes)
 ```
 
 ---
 
 ## 📁 Estructura del Repositorio
 
-- `pieces/`: Directorio canónico donde se almacenan las piezas con sus respectivos artefactos (`.scad`, `.stl`, `.3mf`, `manifest.json`, `viewer.html`, `renders/` y `README.md`).
+- `pieces/`: Directorio canónico donde se almacenan las piezas con sus respectivos artefactos (`.scad`, `.stl`, `.3mf`, `manifest.json`, `viewer.html`, `renders/`, `README.md` y `print_feedback.md`).
 - `projects/`: Directorio alternativo de trabajo o proyectos compuestos.
 - `skills/3d-grill-me/`: Entrevista interactiva para madurar ideas y definir características a conservar.
 - `skills/spec-advisor/`: Referencias de tornillería, tolerancias de encaje y propiedades de filamentos.
@@ -135,6 +141,6 @@ Cuando el usuario interactúe contigo, identifica en qué fase se encuentra y co
 - `skills/slicer-advisor/`: Recomendaciones de corte y perfiles optimizados para la Elegoo Centauri Carbon.
 - `skills/elegoo-centauri/`: Scripts CLI para conectar y monitorear la Elegoo Centauri Carbon vía SDCP.
 - `skills/print-doctor/`: Diagnóstico clínico y resolución de fallos FDM (warping, stringing, heat creep).
-- `scripts/`: Herramientas de scaffolding (`scaffold_piece.py`), ingeniería inversa (`measure.py`), verificación cinemática (`sweep.py`), auditoría y autopsia de mallas (`verify_mesh.py`), empaquetado multi-material (`export_3mf.py`), probetas de calibración (`generate_coupon.py`) y generación de galería visual (`generate_gallery.py`).
+- `scripts/`: Herramientas de scaffolding (`scaffold_piece.py`), feedback e inspección (`feedback.py`), verificación de entorno (`verify-environment.sh`), ingeniería inversa (`measure.py`), verificación cinemática (`sweep.py`), auditoría y autopsia de mallas (`verify_mesh.py`), empaquetado multi-material (`export_3mf.py`), probetas de calibración (`generate_coupon.py`) y generación de galería visual (`generate_gallery.py`).
 - `config.toml`: Configuración local (IP de la impresora, parámetros del usuario).
 - `mcp_servers.example.json`: Configuración de servidores MCP (ej. `blender-mcp`).

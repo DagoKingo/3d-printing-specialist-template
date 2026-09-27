@@ -136,6 +136,7 @@ if (RENDER == "preview" || RENDER == "cuerpo") {{
 | [`manifest.json`](./manifest.json) | Certificado de calidad y auditoría (Printability Gate) | ⏳ Pendiente de verificar |
 | [`viewer.html`](./viewer.html) | Visor 3D interactivo en navegador | ⏳ Pendiente de generar |
 | [`renders/`](./renders/) | Capturas multiángulo PNG (isométrica, planta, frontal) | ⏳ Pendiente de capturar |
+| [`print_feedback.md`](./print_feedback.md) | Control de calidad, feedback post-impresión y prescripción clínica (Print Doctor) | ⏳ Pendiente de imprimir |
 
 ---
 
@@ -153,14 +154,80 @@ python3 scripts/generate_gallery.py pieces/{clean_name}/{clean_name}.scad
 
 # 4. Empaquetar a 3MF para OrcaSlicer / ElegooSlicer
 python3 scripts/export_3mf.py pieces/{clean_name}/{clean_name}.stl -o pieces/{clean_name}/{clean_name}.3mf --intent mechanical --material {material}
+
+# 5. Registrar feedback post-impresión o consultar a Print Doctor si requiere ajuste
+python3 scripts/feedback.py pieces/{clean_name} --status PASS --notes "Impresión y ajuste validados"
 ```
 """
     with open(readme_path, "w", encoding="utf-8") as f:
         f.write(readme_content)
 
+    # 3. Crear archivo de feedback post-impresión inicial (print_feedback.md)
+    feedback_path = os.path.join(piece_dir, "print_feedback.md")
+    feedback_content = f"""# Control de Calidad y Feedback Post-Impresión: {clean_name}
+
+**Pieza:** [`{clean_name}`](./README.md)  
+{f"**Hardware Objetivo:** `{target_device}`\\n" if target_device else ""}**Estado de Validación:** ⏳ PENDIENTE_DE_IMPRESION  
+**Última Actualización:** {time.strftime('%Y-%m-%d %H:%M')}  
+
+---
+
+## 📋 Registro de la Impresión Real
+
+| Parámetro | Valor Real en Máquina | Comentario / Observación |
+| :--- | :--- | :--- |
+| **Fecha / Hora de Impresión** | Pendiente | Registrar fecha de retiro de la cama |
+| **Impresora 3D** | Elegoo Centauri Carbon | Placa texturizada PEI |
+| **Material y Marca** | `{material}` (Pendiente especificar bobina) | Registrar marca y horas de secado previo |
+| **Tiempo Real de Impresión** | Pendiente | Comparar contra estimado de slicer |
+| **Masa Real en Báscula** | Pendiente (g) | Comparar contra estimado en manifest.json |
+| **Boquilla / Altura de Capa** | 0.4 mm / 0.20 mm | Acero endurecido |
+
+---
+
+## 🔍 Checklist de Inspección Física (First Article Inspection)
+
+### 1. Adherencia y Base (Z=0)
+- [ ] Base plana sin alabeo ni desprendimiento en esquinas (sin warping).
+- [ ] Libre de pie de elefante excesivo (chaflán de 45° efectivo).
+
+### 2. Calidad Superficial y Estética
+- [ ] Paredes perimetrales lisas y homogéneas sin subextrusión ni costuras prominentes.
+- [ ] Cara superior uniforme (sin cicatrices de boquilla ni infill traslúcido).
+- [ ] Ausencia de hilos finos o telarañas (stringing controlado).
+
+### 3. Soportes y Voladizos
+- [ ] Desprendimiento de soportes limpio y sin cicatrices en caras cosméticas (Zona A).
+- [ ] Voladizos a 45°-50° autoportantes sin descolgamiento de filamento.
+
+### 4. Ajuste Mecánico y Funcional (Fit Check)
+- [ ] Barrenos y alojamientos con la tolerancia nominal prevista ($slop).
+- [ ] Acople firme con el hardware receptor (sin juego holgado y sin requerir fuerza bruta destructiva).
+- [ ] Resistencia a la tracción y flexión adecuada a la orientación de capas.
+
+---
+
+## 🩺 Consulta Clínica Print Doctor (`skills/print-doctor`)
+
+<!-- Si la pieza presentó desviaciones, el agente o el usuario documentarán aquí el diagnóstico y la prescripción -->
+- **Estado Clínico:** No se han reportado defectos mecánicos o dimensionales.
+- **Acciones Realizadas:** Pendiente de inspección física tras impresión en máquina.
+
+---
+
+## 🏁 Veredicto Final
+
+- [ ] **APROBADO (PASS):** La pieza cumple 100% su propósito funcional y tolerancias.
+- [ ] **REQUIERE AJUSTES (ADJUST):** Se requiere corregir CAD o perfil de corte antes de uso definitivo.
+- [ ] **FALLO TOTAL (FAIL):** Pieza inutilizable; requiere diagnóstico de causa raíz y reimpresión.
+"""
+    with open(feedback_path, "w", encoding="utf-8") as f:
+        f.write(feedback_content)
+
     print(f"✨ Estructura de pieza creada exitosamente en: pieces/{clean_name}/")
     print(f"  ├── {clean_name}.scad (Modelo paramétrico)")
     print(f"  ├── README.md (Ficha técnica y lista de artefactos)")
+    print(f"  ├── print_feedback.md (Ficha de inspección y feedback Print Doctor)")
     print(f"  └── renders/ (Directorio de vistas previas)")
 
     return piece_dir

@@ -24,9 +24,28 @@ triggers:
 
 # Skill: 3D Print Doctor (Diagnóstico y Solución de Fallos FDM)
 
+## 0. Identidad del Repositorio, Plantilla Base y Git Upstream
+
+Cualquier agente que ejecute esta skill debe reconocer de inmediato la naturaleza y límites de este repositorio:
+
+1. **Plantilla Base del Repositorio:**
+   - Este repositorio implementa la plantilla corporativa **`laga-solutions/3d-printing-specialist-template`**, formalizada en el manifiesto raíz [`template.yaml`](template.yaml).
+   - Su rol es **exclusivamente de Especialista en Fabricación Aditiva e Ingeniería CAD 3D** (`role: 3d-printing-specialist`).
+   - La skill `print-doctor` actúa como el servicio clínico de resolución de fallos y control de calidad (QA) de piezas impresas.
+
+2. **Verificación Inmediata de Plantilla y Git Upstream:**
+   - Remote `upstream` hacia `https://github.com/DagoKingo/3d-printing-specialist-template.git`.
+   - Consulta [`template.yaml`](template.yaml) y ejecuta `./scripts/verify-environment.sh`.
+
+3. **Persistencia Obligatoria en `print_feedback.md`:**
+   - Toda interacción, síntoma, diagnóstico y prescripción formulada por `print-doctor` **DEBE quedar registrada obligatoriamente en el artefacto `pieces/<nombre_pieza>/print_feedback.md`**.
+   - Queda estrictamente prohibido emitir recetas que queden solo en el chat sin actualizar el reporte de feedback ni iterar los archivos de la pieza.
+
+---
+
 Inspirado en *3d-print-doctor* de Johann-github, adaptado con los parámetros y cinemática de la **Elegoo Centauri Carbon** (CoreXY de alta aceleración, cabina cerrada, extrusor Direct Drive y boquilla de acero endurecido).
 
-> **Objetivo:** Cuando una pieza impresa sale con defectos o la impresión falla a mitad de trabajo, el agente no da respuestas genéricas; actúa como un **médico especialista** que interroga los síntomas con orden clínico, determina la causa raíz y receta la solución exacta (ajuste en OrcaSlicer o mantenimiento de hardware).
+> **Objetivo:** Cuando una pieza impresa sale con defectos o la impresión falla a mitad de trabajo, el agente no da respuestas genéricas; actúa como un **médico especialista** que interroga los síntomas con orden clínico, determina la causa raíz, receta la solución exacta y la registra formalmente en `pieces/<nombre_pieza>/print_feedback.md`.
 
 ---
 
@@ -44,6 +63,35 @@ Cuando el usuario reporte un fallo, averigua estos 4 datos clave antes de receta
 2. **¿Qué material y marca estás usando?** (e.g. PLA, PETG, ABS, ASA, TPU, PA-CF).
 3. **¿Cuándo ocurrió el fallo?** (en la primera capa, a mitad de una pieza larga, o tras acelerar a alta velocidad).
 4. **¿La cabina estaba abierta o cerrada?** *(Crítico para la Centauri Carbon).*
+
+---
+
+## 📝 Procedimiento de Ejecución y Registro en `print_feedback.md`
+
+Cuando el usuario brinde retroalimentación sobre una pieza física impresa:
+
+1. **Localizar o Inicializar el Artefacto:**
+   - Comprueba si existe `pieces/<nombre_pieza>/print_feedback.md`. Si no existe, inicialízalo con:
+     ```bash
+     python3 scripts/feedback.py pieces/<nombre_pieza> --init-only
+     ```
+
+2. **Interrogar el Síntoma y Determinar Causa Raíz:**
+   - Consulta las 4 preguntas de triage y la tabla de diagnósticos frecuentes.
+   - Si el problema es dimensional (e.g. apriete excesivo en ejes o barrenos), diagnostica contracción térmica y tolerancia `$slop`.
+   - Si el problema es de acabado o adherencia (warping, stringing, pie de elefante), diagnostica temperatura, ventilación y retracción.
+
+3. **Registrar la Consulta y Prescripción:**
+   - Ejecuta el comando automatizado de registro o actualiza el archivo directamente:
+     ```bash
+     python3 scripts/feedback.py pieces/<nombre_pieza> --status ADJUST --symptom tight_fit --notes "Eje de 1/2 pulgada entra forzado"
+     ```
+   - El script volcará el diagnóstico, la causa raíz y las acciones prescritas en el archivo `pieces/<nombre_pieza>/print_feedback.md`.
+
+4. **Aplicar el Tratamiento (Bucle de Corrección Iterativa):**
+   - **Si el cambio es CAD:** Modifica `pieces/<nombre_pieza>/<nombre_pieza>.scad`, compila el nuevo `.stl`, pasa el `verify_mesh.py` y genera el nuevo `.3mf`.
+   - **Si el cambio es de Slicer:** Modifica el perfil de corte o ejecuta `export_3mf.py` con los nuevos ajustes y regenera el `.3mf`.
+   - Documenta la nueva versión e iteración en `print_feedback.md`.
 
 ---
 

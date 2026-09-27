@@ -99,10 +99,11 @@ Plantilla y marco de trabajo asistido por IA para concebir, diseñar, validar y 
 │       └── references/         # fdm_troubleshooting.md, filament_doctor.md
 │
 ├── pieces/                     # Directorio canónico de piezas y artefactos
-│   └── <nombre_pieza>/         # .scad, .stl, .3mf, manifest.json, viewer.html, renders/ y README.md
+│   └── <nombre_pieza>/         # .scad, .stl, .3mf, manifest.json, viewer.html, renders/, README.md y print_feedback.md
 ├── projects/                   # Directorio alternativo de trabajo o proyectos compuestos
 └── scripts/                    # Herramientas de verificación, empaquetado y galería
     ├── verify-environment.sh   # Auditor canónico de entorno, dependencias FDM y sincronización upstream
+    ├── feedback.py             # Registro de feedback post-impresión y triage clínico con Print Doctor
     ├── scaffold_piece.py       # Inicializador de estructura completa para una nueva pieza
     ├── measure.py              # Ingeniería inversa: mide cotas, planos, barrenos y perfiles en STL/3MF
     ├── sweep.py                # Verificación cinemática: detecta colisiones e interferencias en piezas móviles
