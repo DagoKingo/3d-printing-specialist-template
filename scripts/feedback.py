@@ -156,13 +156,21 @@ def generate_initial_feedback_content(piece_name, target_device=""):
 - [ ] **FALLO TOTAL (FAIL):** Pieza inutilizable; requiere diagnóstico de causa raíz y reimpresión.
 """
 
+def get_artifacts_dir(piece_dir):
+    for candidate in ["artifacts", "artefacts"]:
+        c_dir = os.path.join(piece_dir, candidate)
+        if os.path.isdir(c_dir):
+            return c_dir
+    return piece_dir
+
 def update_feedback_report(piece_dir, status, symptom=None, notes="", material="", weight="", print_time=""):
-    feedback_path = os.path.join(piece_dir, "print_feedback.md")
+    target_dir = get_artifacts_dir(piece_dir)
+    feedback_path = os.path.join(target_dir, "print_feedback.md")
     piece_name = os.path.basename(piece_dir)
     
     # Si no existe, crear el esqueleto base
     target_device = ""
-    manifest_path = os.path.join(piece_dir, "manifest.json")
+    manifest_path = os.path.join(target_dir, "manifest.json")
     if os.path.exists(manifest_path):
         try:
             import json
@@ -285,7 +293,8 @@ def main():
         sys.exit(1)
 
     if args.init_only:
-        feedback_path = os.path.join(piece_dir, "print_feedback.md")
+        target_dir = get_artifacts_dir(piece_dir)
+        feedback_path = os.path.join(target_dir, "print_feedback.md")
         if not os.path.exists(feedback_path):
             piece_name = os.path.basename(piece_dir)
             content = generate_initial_feedback_content(piece_name)

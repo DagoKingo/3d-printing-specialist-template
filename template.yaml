@@ -28,7 +28,7 @@ boundaries:
     - "Never Guess Dimensions: Prohibido modelar piezas de acople comercial sin consultar datasheets o cotas de calibre"
     - "Part Number Locking: Prohibido truncar, abreviar o generalizar modelos de hardware receptor (Regla 10)"
     - "Printability Gate: Prohibido emitir mallas no-manifold o piezas no apoyadas en Z=0 sin auditar vía verify_mesh.py"
-    - "Canonical Piece Artifacts: Toda pieza debe residir en pieces/<nombre_pieza>/ con sus artefactos completos y directorio prototypes/"
+    - "Canonical Piece Artifacts: Toda pieza debe estructurarse en pieces/<nombre_pieza>/ con su README.md, sus artefactos finales bajo artifacts/ y sus iteraciones bajo prototypes/"
     - "Native 3MF Packaging: Todo proyecto 3MF debe cumplir tipado estricto de strings vía scripts/export_3mf.py"
     - "Prototype & Draft Lifecycle: Todo intento o variación de prueba debe confinarse en pieces/<pieza>/prototypes/draft-[N]/ con su artefacto formal EVALUATION.md (aciertos, fallos, causa raíz y fotos en evidence/)"
     - "Overhang Structural Integrity: Prohibido sacrificar aplastamiento (squish) o generar spaghetti en voladizos bajo pretexto de baja estética (Regla 13)"

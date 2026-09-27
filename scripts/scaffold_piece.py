@@ -21,7 +21,8 @@ def scaffold_piece(piece_name, template="starter", material="PLA", description="
     root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     clean_name = sanitize_name(piece_name)
     piece_dir = os.path.join(root_dir, "pieces", clean_name)
-    renders_dir = os.path.join(piece_dir, "renders")
+    artifacts_dir = os.path.join(piece_dir, "artifacts")
+    renders_dir = os.path.join(artifacts_dir, "renders")
 
     if os.path.exists(piece_dir):
         print(f"⚠️ El directorio para la pieza '{clean_name}' ya existe en: {piece_dir}")
@@ -31,8 +32,8 @@ def scaffold_piece(piece_name, template="starter", material="PLA", description="
     with open(os.path.join(renders_dir, ".gitkeep"), "w") as f:
         f.write("")
 
-    # 1. Crear el archivo CAD paramétrico inicial
-    scad_path = os.path.join(piece_dir, f"{clean_name}.scad")
+    # 1. Crear el archivo CAD paramétrico inicial dentro de artifacts/
+    scad_path = os.path.join(artifacts_dir, f"{clean_name}.scad")
     device_line = f"// Dispositivo Receptor: {target_device}\n" if target_device else ""
     scad_content = f"""// =====================================================================
 // Pieza: {clean_name}
@@ -83,7 +84,7 @@ if (RENDER == "preview" || RENDER == "cuerpo") {{
 
     # 2. Crear ficha técnica README.md
     readme_path = os.path.join(piece_dir, "README.md")
-    verify_cmd = f"python3 scripts/verify_mesh.py pieces/{clean_name}/{clean_name}.stl --manifest --material {material}"
+    verify_cmd = f"python3 scripts/verify_mesh.py pieces/{clean_name}/artifacts/{clean_name}.stl --manifest --material {material}"
     if target_device:
         verify_cmd += f' --target-device "{target_device}"'
 
@@ -128,18 +129,18 @@ if (RENDER == "preview" || RENDER == "cuerpo") {{
 
 ---
 
-## 📦 Artefactos de la Pieza
+## 📦 Artefactos de la Pieza (`artifacts/`)
 
 | Artefacto | Descripción | Estado |
 | :--- | :--- | :--- |
-| [`{clean_name}.scad`](./{clean_name}.scad) | Código CAD paramétrico editable (OpenSCAD + BOSL2) | ✅ Creado |
-| [`{clean_name}.stl`](./{clean_name}.stl) | Malla exportada hermética (Z=0, Z-up) | ⏳ Pendiente de compilar |
-| [`{clean_name}.3mf`](./{clean_name}.3mf) | Proyecto OrcaSlicer con perfiles y placa nombrada | ⏳ Pendiente de empaquetar |
-| [`manifest.json`](./manifest.json) | Certificado de calidad y auditoría (Printability Gate) | ⏳ Pendiente de verificar |
-| [`viewer.html`](./viewer.html) | Visor 3D interactivo en navegador | ⏳ Pendiente de generar |
-| [`renders/`](./renders/) | Capturas multiángulo PNG (isométrica, planta, frontal) | ⏳ Pendiente de capturar |
-| [`print_feedback.md`](./print_feedback.md) | Control de calidad, feedback post-impresión y prescripción clínica (Print Doctor) | ⏳ Pendiente de imprimir |
-| [`prototypes/`](./prototypes/) | Directorio de iteraciones, pruebas físicas y evaluaciones (drafts) | 📁 Estructurado |
+| [`{clean_name}.scad`](./artifacts/{clean_name}.scad) | Código CAD paramétrico editable (OpenSCAD + BOSL2) | ✅ Creado |
+| [`{clean_name}.stl`](./artifacts/{clean_name}.stl) | Malla exportada hermética (Z=0, Z-up) | ⏳ Pendiente de compilar |
+| [`{clean_name}.3mf`](./artifacts/{clean_name}.3mf) | Proyecto OrcaSlicer con perfiles y placa nombrada | ⏳ Pendiente de empaquetar |
+| [`manifest.json`](./artifacts/manifest.json) | Certificado de calidad y auditoría (Printability Gate) | ⏳ Pendiente de verificar |
+| [`viewer.html`](./artifacts/viewer.html) | Visor 3D interactivo en navegador | ⏳ Pendiente de generar |
+| [`renders/`](./artifacts/renders/) | Capturas multiángulo PNG (isométrica, planta, frontal) | ⏳ Pendiente de capturar |
+| [`print_feedback.md`](./artifacts/print_feedback.md) | Control de calidad, feedback post-impresión y prescripción clínica (Print Doctor) | ⏳ Pendiente de imprimir |
+| [`prototypes/`](./prototypes/) | Directorio canónico de iteraciones y prototipos (drafts) | 📁 Estructurado |
 
 ---
 
@@ -147,16 +148,16 @@ if (RENDER == "preview" || RENDER == "cuerpo") {{
 
 ```bash
 # 1. Compilar STL desde OpenSCAD
-openscad -D 'RENDER="cuerpo"' -o pieces/{clean_name}/{clean_name}.stl pieces/{clean_name}/{clean_name}.scad
+openscad -D 'RENDER="cuerpo"' -o pieces/{clean_name}/artifacts/{clean_name}.stl pieces/{clean_name}/artifacts/{clean_name}.scad
 
 # 2. Auditar imprimibilidad y generar manifest.json
 {verify_cmd}
 
 # 3. Generar visor Three.js y vistas previas PNG
-python3 scripts/generate_gallery.py pieces/{clean_name}/{clean_name}.scad
+python3 scripts/generate_gallery.py pieces/{clean_name}/artifacts/{clean_name}.scad
 
 # 4. Empaquetar a 3MF para OrcaSlicer / ElegooSlicer
-python3 scripts/export_3mf.py pieces/{clean_name}/{clean_name}.stl -o pieces/{clean_name}/{clean_name}.3mf --intent mechanical --material {material}
+python3 scripts/export_3mf.py pieces/{clean_name}/artifacts/{clean_name}.stl -o pieces/{clean_name}/artifacts/{clean_name}.3mf --intent mechanical --material {material}
 
 # 5. Registrar feedback post-impresión o consultar a Print Doctor si requiere ajuste
 python3 scripts/feedback.py pieces/{clean_name} --status PASS --notes "Impresión y ajuste validados"
@@ -165,8 +166,8 @@ python3 scripts/feedback.py pieces/{clean_name} --status PASS --notes "Impresió
     with open(readme_path, "w", encoding="utf-8") as f:
         f.write(readme_content)
 
-    # 3. Crear archivo de feedback post-impresión inicial (print_feedback.md)
-    feedback_path = os.path.join(piece_dir, "print_feedback.md")
+    # 3. Crear archivo de feedback post-impresión inicial (artifacts/print_feedback.md)
+    feedback_path = os.path.join(artifacts_dir, "print_feedback.md")
     feedback_content = f"""# Control de Calidad y Feedback Post-Impresión: {clean_name}
 
 **Pieza:** [`{clean_name}`](./README.md)  
@@ -231,11 +232,12 @@ python3 scripts/feedback.py pieces/{clean_name} --status PASS --notes "Impresió
     scaffold_draft(piece_dir, 1, goal="Primer prototipo funcional de validación dimensional y mecánica.", target_device=target_device)
 
     print(f"✨ Estructura de pieza creada exitosamente en: pieces/{clean_name}/")
-    print(f"  ├── {clean_name}.scad (Modelo paramétrico)")
-    print(f"  ├── README.md (Ficha técnica y lista de artefactos)")
-    print(f"  ├── print_feedback.md (Ficha de inspección y feedback Print Doctor)")
-    print(f"  ├── prototypes/draft-1/ (Primer borrador/prueba física con EVALUATION.md)")
-    print(f"  └── renders/ (Directorio de vistas previas)")
+    print(f"  ├── README.md (Ficha técnica maestra y dossier del hardware)")
+    print(f"  ├── artifacts/ (Artefactos canónicos de la versión final)")
+    print(f"  │   ├── {clean_name}.scad (Modelo paramétrico editable)")
+    print(f"  │   ├── print_feedback.md (Ficha de inspección y feedback Print Doctor)")
+    print(f"  │   └── renders/ (Directorio de vistas previas)")
+    print(f"  └── prototypes/draft-1/ (Primer borrador/prueba física con EVALUATION.md)")
 
     return piece_dir
 
