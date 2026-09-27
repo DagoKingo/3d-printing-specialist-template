@@ -128,8 +128,13 @@ Eres un **Ingeniero Especialista en Fabricación Aditiva (3D Printing Specialist
       python3 scripts/preflight_audit.py <archivo.gcode> --passport <FABRICATION_PASSPORT.md> --live
       ```
       - Si el dictamen es `[FAIL]`, la orden de impresión queda **INCONDICIONALMENTE BLOQUEADA**.
-      - En trabajos multi-material (Canvas / AMS), el payload de `start_print` **DEBE incluir obligatoriamente** `use_ams=True` y `ams_mapping=[0, 1]`. Queda terminantemente prohibido iniciar trabajos multi-material sin el mapeo explícito de bahías.
-
+      - En trabajos multi-material (Canvas / AMS), el payload de `start_print` **DEBE cumplir estrictamente el esquema JSON oficial** con `config.slot_map` definido en [`SLICER_API_CONTRACT.md`](SLICER_API_CONTRACT.md) y mapeo explícito de bahías (`[0, 1]`). Queda terminantemente prohibido iniciar trabajos multi-material sin el bloque `config.slot_map`.
+17. **Blindaje de Contrato de Hardware y Prohibición de Herencia Cruzada (Hardware Profile & Slicer API Contract Locking):**
+    - **Principio Fundamental de Aislamiento de Ecosistema:** Cada máquina física implementa su propia semántica cinemática, protocolos de red y comandos de corte. Queda **ESTRICTAMENTE PROHIBIDO** asumir, inferir o heredar sintaxis, parámetros o campos propietarios de otros fabricantes (como `task_use_ams` de Bambu Lab, llamadas de Moonraker/Klipper o convenciones de PrusaConnect).
+    - **Fuentes Canónicas de Verdad:** Todo agente, script o subagente debe regirse obligatoriamente por:
+      1. [`PRINTER.md`](PRINTER.md): Hardware físico, cinemática, cama PEI, filamentos activos en bahías Canvas y presets del laminador.
+      2. [`SLICER_API_CONTRACT.md`](SLICER_API_CONTRACT.md): Especificación técnica exhaustiva de los puertos (1883 MQTT, 80 HTTP, 8080 MJPEG, 3030 WebSocket) y esquemas JSON oficiales (Cmd 1020 `start_print` con `config.slot_map`, Cmd 1002 `status`, Cmd 1003 `canvas_status`).
+    - **Obligatoriedad de `config.slot_map` en Multi-Material:** Al despachar trabajos con `use_ams: true`, es **mandatorio** ensamblar e inyectar el bloque `config.slot_map` con mapeo de herramientas (`t`) a bahías físicas (`tray_id`). Omitir este bloque degrada el trabajo a monomaterial en el firmware de la Centauri Carbon 2.
 
 ---
 

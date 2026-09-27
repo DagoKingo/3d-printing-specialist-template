@@ -64,12 +64,14 @@ Al contar con cambio automático de filamento, **queda estrictamente prohibido u
 
 ---
 
-## 5. Parámetros de Red y Protocolo de Monitoreo (SDCP)
+## 5. Parámetros de Red y Arquitectura de Comunicación
 
-- **Protocolo:** SDCP v3.0.0 (Smart Device Control Protocol) sobre WebSocket.
-- **Puerto de Comunicación:** `3030`.
-- **Comandos Soportados:** Consulta de telemetría en tiempo real (temperaturas de boquilla/cama/cámara, estado de ventiladores, posición de ejes, estado de ranuras Canvas, control de luz LED y cámara integrada).
-- **Herramienta CLI:** [`skills/elegoo-centauri/scripts/elegoo_sdcp.py`](skills/elegoo-centauri/scripts/elegoo_sdcp.py).
+- **Contrato Maestro de Red y Slicer:** [`SLICER_API_CONTRACT.md`](SLICER_API_CONTRACT.md) (Fuente única de verdad para esquemas JSON, comandos y despacho).
+- **Puerto 1883 (MQTT):** Control maestro SDCP v3.0, comandos de impresión (`start_print`, `pause`, `stop`), telemetría y eventos autenticados mediante `access_code`.
+- **Puerto 80 (HTTP):** Carga binaria multipart/chunked de archivos `.gcode` y proyectos `.3mf` hacia el almacenamiento local (`/local`).
+- **Puerto 8080 (HTTP):** Transmisión de video en vivo MJPEG (`http://<IP>:8080/?action=stream`, 30 FPS sin consumo de tokens).
+- **Puerto 3030 (WebSocket):** Telemetría push SDCP para pantallas y monitores de estado.
+- **Herramienta CLI:** `centauri` (`pycentauri`).
 
 ---
 
@@ -78,3 +80,4 @@ Al contar con cambio automático de filamento, **queda estrictamente prohibido u
 1. **Contexto Obligatorio:** Todo agente debe leer este archivo antes de sugerir o exportar proyectos `.3mf`.
 2. **Preset de Sistema:** Los perfiles de corte deben anclarse a `"Elegoo Centauri Carbon 2 0.4 nozzle"` y `"0.20mm Standard @Elegoo CC2 0.4 nozzle"`.
 3. **Prioridad Multi-Material en Voladizos Críticos:** Si una pieza monomaterial presenta un voladizo horizontal plano donde el soporte convencional degrade la superficie, el agente **DEBE proponer utilizar el sistema Canvas con interfaz incompatible (ABS + PETG a Z=0.00 mm)** para lograr una cara inferior 100% sólida y plana.
+4. **Blindaje de Contrato de Red y Slicer (Regla 17):** Queda estrictamente prohibido despachar trabajos o enviar comandos asumiendo sintaxis o parámetros de Bambu Lab (ej. `task_use_ams` o `ams_mapping` aislados) o Klipper/Moonraker. Toda orden multi-material DEBE ceñirse estrictamente al esquema JSON oficial con `config.slot_map` definido en [`SLICER_API_CONTRACT.md`](SLICER_API_CONTRACT.md).

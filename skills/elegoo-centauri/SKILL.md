@@ -35,11 +35,18 @@ Permite al agente o al usuario interactuar directamente con la **Elegoo Centauri
 
 ---
 
-## 📡 Parámetros de Red
+## 📡 Parámetros de Red y Contrato Oficial (`SLICER_API_CONTRACT.md`)
 
-- **Protocolo:** WebSocket SDCP (`ws://<IP_IMPRESORA>:3030/websocket`).
-- **Configuración de IP:** Se define en `config/config.toml` (o variable de entorno `ELEGOO_PRINTER_IP` / `KILN_PRINTER_HOST`).
-- **Descubrimiento de MainboardID:** Auto-descubrimiento en la primera conexión.
+Todo agente que interactúe con la máquina o prepare envíos debe cumplir estrictamente el contrato formalizado en [`SLICER_API_CONTRACT.md`](../../SLICER_API_CONTRACT.md):
+- **Puerto 1883 (MQTT):** Control maestro SDCP v3.0 autenticado con `access_code`.
+- **Puerto 80 (HTTP):** Subida binaria de archivos G-code y 3MF (`/local`).
+- **Puerto 8080 (HTTP):** Stream de video en vivo MJPEG (`http://<IP>:8080/?action=stream`).
+- **Puerto 3030 (WebSocket):** Telemetría continua.
+
+> [!CAUTION]
+> **Prohibición de Herencia Bambu Lab / AMS en Despacho (Regla 17):**
+> Al iniciar trabajos multi-material (Canvas), el payload del método 1020 (`start_print`) **DEBE incluir obligatoriamente** el bloque `config.slot_map` mapeando `{ "t": <herramienta>, "canvas_id": 0, "tray_id": <bahía> }`.
+> Parámetros estilo Bambu Lab (`task_use_ams: true`, `ams_mapping: [0, 1]`) sin `config.slot_map` causan que el firmware degrade la impresión a monomaterial en silencio.
 
 ---
 

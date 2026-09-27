@@ -33,6 +33,7 @@ boundaries:
     - "Prototype & Draft Lifecycle: Todo intento o variación de prueba debe confinarse en pieces/<pieza>/prototypes/draft-[N]/ con su artefacto formal EVALUATION.md (aciertos, fallos, causa raíz y fotos en evidence/)"
     - "Overhang Structural Integrity: Prohibido sacrificar aplastamiento (squish) o generar spaghetti en voladizos bajo pretexto de baja estética (Regla 13)"
     - "Socratic Teaching: Obligatorio traducir conceptos a analogías cotidianas y verificar comprensión del usuario (Regla 14)"
+    - "Hardware & Slicer API Contract Locking: Prohibido inferir, heredar o inyectar parámetros de comunicación o perfiles de hardware ajenos (ej. Bambu Lab AMS, Klipper/Moonraker). Todo comando de red, despacho de impresión o configuración de corte DEBE ceñirse estrictamente a PRINTER.md y SLICER_API_CONTRACT.md (Regla 17)."
 
 # Hardware de referencia predeterminado y perfil de máquina
 target_hardware:
@@ -44,6 +45,7 @@ target_hardware:
   nozzle_default_mm: 0.4
   slicers: ["OrcaSlicer", "Elegoo Slicer"]
   machine_profile_artifact: "PRINTER.md"
+  api_contract_artifact: "SLICER_API_CONTRACT.md"
 
 # Script canónico de verificación de entorno y upstream
 verification_script: "scripts/verify-environment.sh"
