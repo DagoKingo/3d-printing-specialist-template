@@ -63,7 +63,7 @@ Plantilla y marco de trabajo asistido por IA para concebir, diseñar, validar y 
 ├── CLAUDE.md                   # Puntero para Claude Code
 ├── GEMINI.md                   # Puntero para Gemini CLI / Antigravity
 ├── config.toml                 # Configuración de impresora (IP, volumen) y slicer
-├── mcp_servers.example.json    # Configuración de servidores MCP (BlenderMCP)
+├── mcp_servers.example.json    # Configuración de servidores MCP (BlenderMCP y Kiln MCP para Elegoo Centauri Carbon)
 ├── requirements.txt            # Dependencias Python opcionales
 │
 ├── skills/
@@ -104,6 +104,7 @@ Plantilla y marco de trabajo asistido por IA para concebir, diseñar, validar y 
 └── scripts/                    # Herramientas de verificación, empaquetado y galería
     ├── verify-environment.sh   # Auditor canónico de entorno, dependencias FDM y sincronización upstream
     ├── feedback.py             # Registro de feedback post-impresión y triage clínico con Print Doctor
+    ├── filament_database.py    # Cliente Open Filament Database (OFD) y descarga de presets OrcaSlicer
     ├── scaffold_piece.py       # Inicializador de estructura completa para una nueva pieza
     ├── measure.py              # Ingeniería inversa: mide cotas, planos, barrenos y perfiles en STL/3MF
     ├── sweep.py                # Verificación cinemática: detecta colisiones e interferencias en piezas móviles
@@ -127,10 +128,14 @@ sudo apt install openscad
 brew install openscad
 ```
 
-### 2. Motor Orgánico (Blender + BlenderMCP - Opcional)
-Para habilitar el modelado interactivo en vivo de figuras y formas orgánicas:
+### 2. Servidores MCP para Agentes (BlenderMCP & Kiln 3D - Opcional)
+Para habilitar el modelado interactivo orgánico y el control autónomo de la Elegoo Centauri Carbon:
 ```bash
+# Modelado orgánico en vivo (Track B)
 uvx blender-mcp
+
+# Servidor MCP para control, cámara y telemetría de Elegoo Centauri Carbon
+uvx --from kiln3d kiln serve
 ```
 Consulta [`mcp_servers.example.json`](file:///home/dago/repos/3d-printing-specialist-template/mcp_servers.example.json) y [`skills/blender-mcp/references/mcp_setup.md`](file:///home/dago/repos/3d-printing-specialist-template/skills/blender-mcp/references/mcp_setup.md).
 
@@ -176,3 +181,5 @@ Esta plantilla sintetiza y adapta las mejores prácticas de destacados proyectos
 - **Santiago Moneta** ([`3DPrintAdvisor`](https://github.com/santiagomoneta/3DPrintAdvisor) & [`3d-printing-skills`](https://github.com/santiagomoneta/3d-printing-skills)): Ajustes de slicer por intención y gestión Klipper/OrcaSlicer.
 - **Marco Franzon** ([`print3d`](https://github.com/mfranzon/print3d)): Bucle de verificación automatizada.
 - **Chris Cantey** ([`skill-3d-printing`](https://github.com/chriscantey/skill-3d-printing)): Patrones de OpenSCAD, selector RENDER y GalleryView multiángulo.
+- **Axel** ([`Kiln`](https://github.com/codeofaxel/Kiln)): Servidor MCP para control integral de impresoras 3D, telemetría y soporte SDCP Elegoo.
+- **Open Filament Collective** ([`open-filament-database`](https://github.com/OpenFilamentCollective/open-filament-database)): Catálogo abierto de filamentos y presets directos para OrcaSlicer.
