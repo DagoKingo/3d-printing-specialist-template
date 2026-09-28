@@ -29,9 +29,13 @@ Cualquier agente que ejecute esta skill debe reconocer de inmediato la naturalez
 
 ---
 
-Permite al agente o al usuario interactuar directamente con la **Elegoo Centauri Carbon** a través de su protocolo nativo SDCP (Smart Device Control Protocol v3.0.0) en el puerto `3030`. Ofrece dos modalidades de operación:
-1. **Modo Directo / Ligero (`centauri_ctl.py`):** Script Python nativo sin dependencias pesadas.
-2. **Modo Servidor MCP Autónomo ([Kiln](https://github.com/codeofaxel/Kiln)):** Servidor MCP para agentes con cámara web, verificación de seguridad (*pre-flight checks*), slicing y gestión de colas.
+Permite al agente o al usuario interactuar directamente con la **Elegoo Centauri Carbon** a través de su protocolo nativo SDCP (Smart Device Control Protocol v3.0.0). Ofrece dos modalidades de operación:
+1. **Canal Primario / Recomendado (CLI `centauri` vía MQTT):** `~/.venv-3d/bin/centauri` (pycentauri) sobre MQTT puerto `1883` + HTTP puertos `80`/`8080`. Es la vía verificada en campo: el puerto WS `3030` puede estar cerrado según firmware/estado.
+2. **Fallback / Ligero (`centauri_ctl.py` vía WebSocket):** Script Python sobre WS puerto `3030`. Requiere el módulo `websockets` en el venv del proyecto. Usar solo si el canal MQTT no responde.
+3. **Modo Servidor MCP Autónomo ([Kiln](https://github.com/codeofaxel/Kiln)):** Servidor MCP para agentes con cámara web, verificación de seguridad (*pre-flight checks*), slicing y gestión de colas.
+
+> [!CAUTION]
+> **Orden canónico de canales (lección de campo 2026-09-27):** intentar siempre primero `centauri status` (MQTT `:1883`). Si el WS `:3030` responde `Connection refused`, NO es un fallo del script ni falta de librería: es el firmware con ese puerto cerrado. Seguir por MQTT sin reintentos al WS.
 
 ---
 
@@ -80,11 +84,18 @@ Agrega la configuración en tu entorno de agentes (Claude, Antigravity, etc.):
 
 ---
 
-## 💻 Modalidad B: Comandos CLI Directos (`scripts/centauri_ctl.py`)
+## 💻 Modalidad B: Comandos CLI Directos (`centauri`, primario) y Fallback WS (`scripts/centauri_ctl.py`)
 
-Para operaciones rápidas en terminal o cuando no se dispone del servidor MCP activo:
+Canal primario para operaciones rápidas en terminal (verificado en campo vía MQTT `:1883`):
+```bash
+~/.venv-3d/bin/centauri status
+~/.venv-3d/bin/centauri canvas
+```
+*Muestra:* Estado actual (Idle, Printing, Paused), temperatura actual/objetivo de boquilla, cama y cámara, velocidad de ventiladores y luz.
 
-### 1. Consultar Estado y Temperaturas
+Fallback solo si MQTT no responde — requiere `websockets` instalado en el venv (`~/.venv-3d` ya lo incluye; el `python3` del sistema, no):
+
+### 1. Consultar Estado y Temperaturas (fallback WS)
 ```bash
 python3 skills/elegoo-centauri/scripts/centauri_ctl.py status
 ```

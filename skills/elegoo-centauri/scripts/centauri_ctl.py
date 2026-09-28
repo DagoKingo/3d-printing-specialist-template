@@ -214,6 +214,8 @@ async def run_cli():
     except Exception as e:
         print(f"⚠️ No se pudo comunicar con la impresora ({ip}:{port}): {e}")
         print("Verifica que la impresora esté encendida y conectada a la misma red local.")
+        print("Si el error es 'Connection refused' en el puerto 3030, el firmware tiene el WS cerrado:")
+        print("usa el canal primario MQTT: ~/.venv-3d/bin/centauri status")
     finally:
         await client.close()
 
@@ -221,4 +223,6 @@ if __name__ == "__main__":
     if HAS_WEBSOCKETS:
         asyncio.run(run_cli())
     else:
-        print("❌ Error: Falta librería websockets. Instálala con 'pip install websockets'.")
+        print("❌ Error: Falta librería websockets. Usa el intérprete del proyecto")
+        print("   (~/.venv-3d/bin/python, ya la incluye) o el canal primario MQTT:")
+        print("   ~/.venv-3d/bin/centauri status")
