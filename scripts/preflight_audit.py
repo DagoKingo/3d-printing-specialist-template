@@ -34,8 +34,12 @@ def parse_passport(passport_path):
         "t1_material": None,
         "t1_tray": None,
         "wall_loops": None,
+        "support_type": None,
+        "support_style": None,
         "support_top_z_distance": None,
         "support_interface_spacing": None,
+        "support_interface_top_layers": None,
+        "support_object_xy_distance": None,
         "xy_hole_compensation": None,
     }
 
@@ -87,7 +91,138 @@ def parse_passport(passport_path):
     if m_xy:
         passport["xy_hole_compensation"] = float(m_xy.group(1))
 
+    # Parámetros de soporte nominal (estilo/tipo) para auditoría de 3MF.
+    # Fuente primaria: Slicer Settings Lock Table del pasaporte (P4):
+    #   | `support_type` | `normal(auto)` |
+    for m_row in re.finditer(r"^\|\s*`?(support_type|support_style)`?\s*\|\s*`?([^|`\n]+)`?\s*\|", content, re.MULTILINE):
+        passport[m_row.group(1)] = m_row.group(2).strip().strip("`").strip()
+    # Fallback legacy: tokens inline estilo `normal(auto)/snug`
+    if passport["support_type"] is None:
+        m_stype = re.search(r"`((?:normal|tree)\([^`]*\))", content)
+        if m_stype:
+            passport["support_type"] = m_stype.group(1).strip()
+    if passport["support_style"] is None:
+        m_sstyle = re.search(r"/(snug|grid|rectilinear|honeycomb|lightning|gyroid)`", content)
+        if m_sstyle:
+            passport["support_style"] = m_sstyle.group(1).strip()
+    m_slay = re.search(r"support_interface_top_layers.*?(\d+)", content, re.IGNORECASE)
+    if not m_slay:
+        m_slay = re.search(r"(?<!\w)top_layers\s*:\s*(\d+)", content, re.IGNORECASE)
+    if m_slay:
+        passport["support_interface_top_layers"] = int(m_slay.group(1))
+    m_sxy = re.search(r"support_object_xy_distance.*?([\d\.]+)", content, re.IGNORECASE)
+    if not m_sxy:
+        m_sxy = re.search(r"xy_distance\s*:\s*([\d\.]+)", content, re.IGNORECASE)
+    if m_sxy:
+        passport["support_object_xy_distance"] = float(m_sxy.group(1))
+
     return passport
+
+def audit_3mf(mf_path, passport):
+    """Verifica un proyecto .3mf contra el pasaporte ANTES de laminar.
+
+    Inspecciona Metadata/project_settings.config dentro del zip:
+    tipado string, valores exactos del pasaporte, cobertura en
+    different_settings_to_system y anclaje al preset CC2.
+    Un PASS aquí autoriza el laminado headless, NO la impresión
+    (el G-code resultante aún debe pasar audit_gcode).
+    """
+    issues = []
+    checks = []
+
+    if not os.path.exists(mf_path):
+        return [f"Archivo 3MF no encontrado: {mf_path}"], []
+    if not mf_path.lower().endswith(".3mf"):
+        return [f"audit_3mf recibió un archivo no-3MF: {mf_path}"], []
+
+    import zipfile
+    try:
+        with zipfile.ZipFile(mf_path, "r") as z:
+            raw = z.read("Metadata/project_settings.config").decode("utf-8")
+    except Exception as e:
+        return [f"3MF ilegible o sin Metadata/project_settings.config: {e}"], []
+
+    try:
+        cfg = json.loads(raw)
+    except Exception as e:
+        return [f"project_settings.config no es JSON válido: {e}"], []
+
+    def num(key):
+        try:
+            return float(str(cfg.get(key, "")))
+        except Exception:
+            return None
+
+    # 1. Tipado estricto de strings (motor C++ ElegooSlicer descarta numéricos)
+    for key in ("support_type", "support_style", "support_top_z_distance",
+                "support_interface_spacing", "support_interface_top_layers",
+                "support_object_xy_distance", "wall_loops",
+                "sparse_infill_density", "xy_hole_compensation", "enable_support"):
+        if key in cfg and not isinstance(cfg[key], str):
+            issues.append(f"3MF tipado inválido: '{key}' no es string (será descartado por el slicer)")
+
+    # 2. Valores exactos del pasaporte
+    if passport["wall_loops"] is not None:
+        v = num("wall_loops")
+        if v is None:
+            issues.append("3MF sin 'wall_loops' definido")
+        elif int(v) < passport["wall_loops"]:
+            issues.append(f"3MF wall_loops={int(v)}, pasaporte exige mínimo {passport['wall_loops']}")
+        else:
+            checks.append(f"3MF wall_loops: {int(v)} >= {passport['wall_loops']} [OK]")
+
+    for key in ("support_top_z_distance", "support_interface_spacing",
+                "support_object_xy_distance", "xy_hole_compensation"):
+        if passport[key] is not None:
+            v = num(key)
+            if v is None:
+                issues.append(f"3MF sin '{key}' definido")
+            elif abs(v - passport[key]) > 0.01:
+                issues.append(f"3MF {key}={v}, pasaporte exige {passport[key]}")
+            else:
+                checks.append(f"3MF {key}: {v} [OK]")
+
+    if passport["support_interface_top_layers"] is not None:
+        v = num("support_interface_top_layers")
+        if v is None:
+            issues.append("3MF sin 'support_interface_top_layers' definido")
+        elif int(v) != passport["support_interface_top_layers"]:
+            issues.append(f"3MF support_interface_top_layers={int(v)}, pasaporte exige {passport['support_interface_top_layers']}")
+        else:
+            checks.append(f"3MF support_interface_top_layers: {int(v)} [OK]")
+
+    for key in ("support_type", "support_style"):
+        if passport[key] is not None:
+            v = cfg.get(key)
+            if not isinstance(v, str):
+                issues.append(f"3MF sin '{key}' como string")
+            elif v.strip().lower() != passport[key].strip().lower():
+                issues.append(f"3MF {key}='{v}', pasaporte exige '{passport[key]}'")
+            else:
+                checks.append(f"3MF {key}: '{v}' [OK]")
+
+    # 3. Cobertura en different_settings_to_system (sin esto el slicer resetea)
+    diffs = cfg.get("different_settings_to_system", ["", "", "", ""])
+    retained = diffs[0] if isinstance(diffs, list) and diffs else ""
+    for key in ("wall_loops", "support_type", "support_style", "support_top_z_distance",
+                "support_interface_spacing", "support_interface_top_layers",
+                "support_object_xy_distance", "xy_hole_compensation"):
+        if key not in retained:
+            issues.append(f"3MF '{key}' fuera de different_settings_to_system (el slicer lo sobreescribirá)")
+    if not issues or all("fuera de different" not in i for i in issues):
+        checks.append("3MF different_settings_to_system con cobertura de soportes [OK]")
+
+    # 4. Anclaje al preset base del sistema
+    preset = cfg.get("print_settings_id", "")
+    if preset != "0.20mm Standard @Elegoo CC2 0.4 nozzle":
+        issues.append(f"3MF print_settings_id='{preset}', debe anclarse al preset CC2 0.4")
+    else:
+        checks.append("3MF print_settings_id anclado al preset CC2 [OK]")
+
+    if not issues:
+        checks.append("3MF AUTORIZADO PARA LAMINADO HEADLESS (aún requiere auditoría del G-code resultante) [OK]")
+
+    return issues, checks
 
 def audit_gcode(gcode_path, passport):
     """Verifica el G-code contra los criterios del pasaporte."""
@@ -255,10 +390,13 @@ def main():
     all_issues = []
     all_checks = []
 
-    # 1. Auditoría de archivo
-    gcode_issues, gcode_checks = audit_gcode(args.target, passport)
-    all_issues.extend(gcode_issues)
-    all_checks.extend(gcode_checks)
+    # 1. Auditoría de archivo (3MF: gate pre-laminado / G-code: gate pre-impresión)
+    if args.target.lower().endswith(".3mf"):
+        file_issues, file_checks = audit_3mf(args.target, passport)
+    else:
+        file_issues, file_checks = audit_gcode(args.target, passport)
+    all_issues.extend(file_issues)
+    all_checks.extend(file_checks)
 
     # 2. Auditoría de hardware en vivo si se solicita
     if args.live:
@@ -270,15 +408,22 @@ def main():
     for c in all_checks:
         print(f"  ✅ {c}")
 
+    is_3mf = args.target.lower().endswith(".3mf")
     if all_issues:
-        print("\n🚫 BLOQUEO DE IMPRESIÓN — NO CONFORMIDADES DETECTADAS:")
+        print("\n🚫 BLOQUEO — NO CONFORMIDADES DETECTADAS:")
         for issue in all_issues:
             print(f"  ❌ {issue}")
-        print("\n🏁 VEREDICTO FINAL: [FAIL — IMPRESIÓN BLOQUEADA]")
+        if is_3mf:
+            print("\n🏁 VEREDICTO FINAL: [FAIL — LAMINADO BLOQUEADO: corrija el 3MF contra el pasaporte]")
+        else:
+            print("\n🏁 VEREDICTO FINAL: [FAIL — IMPRESIÓN BLOQUEADA]")
         print("=======================================================")
         sys.exit(1)
     else:
-        print("\n🏁 VEREDICTO FINAL: [PASS — AUTORIZADO PARA IMPRESIÓN]")
+        if is_3mf:
+            print("\n🏁 VEREDICTO FINAL: [PASS — 3MF AUTORIZADO PARA LAMINADO; aún requiere auditoría del G-code]")
+        else:
+            print("\n🏁 VEREDICTO FINAL: [PASS — AUTORIZADO PARA IMPRESIÓN]")
         if passport["use_ams"]:
             print(f"ℹ️  Directiva de Lanzamiento: Ejecutar start_print con use_ams=True y ams_mapping={passport['ams_mapping']}")
         print("=======================================================")

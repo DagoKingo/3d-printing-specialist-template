@@ -48,10 +48,26 @@ Cualquier G-code enviado a máquina DEBE cumplir de forma binaria e innegociable
 - [ ] **Compensación de Agujeros (`xy_hole_compensation`):** Fijada estrictamente en `{{XY_HOLE_COMPENSATION}} mm` (respetando la cota paramétrica de CAD sin doble compensación).
 - [ ] **Estrategia de Soportes:**
   - Tipo: `{{SUPPORT_TYPE}}` (Snug / Normal / Tree).
+  - Estilo: `{{SUPPORT_STYLE}}` (snug / grid / rectilinear).
   - Brecha Z (`support_top_z_distance`): `{{SUPPORT_Z_DISTANCE}} mm` (0.00 mm para Zero-Gap multimaterial; 0.14-0.18 mm para monomaterial).
   - Espaciado de Interfaz (`support_interface_spacing`): `{{SUPPORT_INTERFACE_SPACING}} mm` (0.00 mm para losa continua anti-velcro).
   - Capas de Interfaz (`support_interface_top_layers`): Mínimo `{{SUPPORT_INTERFACE_LAYERS}}` capas.
+  - Distancia XY (`support_object_xy_distance`): `{{SUPPORT_XY_DISTANCE}} mm`.
 - [ ] **Torre de Purga (Prime Tower):** `{{PRIME_TOWER_STATUS}}` (Ancho `{{PRIME_TOWER_WIDTH}} mm`).
+
+### Tabla Lock de Settings de Slicer (machine-checkable por `audit_3mf`)
+> Cada fila `clave → valor` DEBE existir como string exacto en `Metadata/project_settings.config` del 3MF y la clave en `different_settings_to_system`. Sin esta tabla completa, el Gate 1 falla.
+
+| Clave Slicer | Valor Exigido |
+| :--- | :--- |
+| `wall_loops` | `{{MIN_WALL_LOOPS}}` |
+| `support_type` | `{{SUPPORT_TYPE}}` |
+| `support_style` | `{{SUPPORT_STYLE}}` |
+| `support_top_z_distance` | `{{SUPPORT_Z_DISTANCE}}` |
+| `support_interface_spacing` | `{{SUPPORT_INTERFACE_SPACING}}` |
+| `support_interface_top_layers` | `{{SUPPORT_INTERFACE_LAYERS}}` |
+| `support_object_xy_distance` | `{{SUPPORT_XY_DISTANCE}}` |
+| `xy_hole_compensation` | `{{XY_HOLE_COMPENSATION}}` |
 
 ---
 

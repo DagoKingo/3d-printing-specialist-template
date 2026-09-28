@@ -125,12 +125,28 @@ Para evitar el popup *"The 3MF file you are importing may be incompatible..."* (
 ### 🛠️ Herramienta CLI Automatizada (`scripts/export_3mf.py`)
 Genera proyectos 3MF nativos listos para imprimir con:
 ```bash
-# Perfil mecánico funcional (6 paredes, 40% giroide, soportes árbol, +0.15 mm compensación)
+# Perfil mecánico funcional (6 paredes, 40% giroide, +0.15 mm compensación)
 python3 scripts/export_3mf.py pieces/<pieza>/<pieza>.stl -o pieces/<pieza>/<pieza>.3mf --intent mechanical --material PETG
 
-# Personalizado
-python3 scripts/export_3mf.py pieza.stl -o proyecto.3mf --material PLA --support --walls 4 --infill 30%
+# Horneando el pasaporte (OBLIGATORIO cuando el pasaporte fija soportes: el intent NO equivale al pasaporte)
+python3 scripts/export_3mf.py pieza.stl -o proyecto.3mf --intent mechanical --material ABS \
+  --support-type "normal(auto)" --support-style snug --support-top-z 0.16 \
+  --support-interface-spacing 0.15 --support-interface-layers 3
 ```
+
+> [!CAUTION]
+> **El `--intent` NO equivale al pasaporte:** todos los intents hornean `support_type: tree(auto)` y losa `0.20` por defecto. Si el `FABRICATION_PASSPORT.md` exige otros valores (ej. `normal(auto)` / `0.15`), pasar los flags `--support-*` o el Gate 1 lo bloqueará.
+
+### 🔗 Cadena Canónica Headless (sin GUI): 3MF → G-code → impresión
+```bash
+# Gate 1: 3MF contra pasaporte (autoriza laminado)
+python3 scripts/preflight_audit.py proyecto.3mf --passport <FABRICATION_PASSPORT.md>
+# Laminado headless vía OrcaSlicer API/CLI
+orca-slicer --slice 0 --outputdir <dir/> proyecto.3mf
+# Gate 2: G-code contra pasaporte + hardware vivo (autoriza impresión)
+python3 scripts/preflight_audit.py <dir/plate_1.gcode> --passport <FABRICATION_PASSPORT.md> --live
+```
+Prohibido laminar desde un 3MF sin PASS del Gate 1, y prohibido `start_print` sin PASS del Gate 2.
 
 ---
 
