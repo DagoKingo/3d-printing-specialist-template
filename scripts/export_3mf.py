@@ -388,6 +388,11 @@ def main():
     parser.add_argument("--infill", help="Densidad de relleno (ej. 40%%)")
     parser.add_argument("--infill-pattern", help="Patrón de relleno (ej. gyroid, rectilinear)")
     parser.add_argument("--hole-compensation", type=float, help="Compensación de agujeros X-Y en mm (ej. 0.15)")
+    parser.add_argument("--support-type", help="Tipo de soporte (ej. normal(auto), tree(auto)). Default: preset del intent")
+    parser.add_argument("--support-style", help="Estilo de soporte (ej. snug, grid). Default: snug si hay soportes")
+    parser.add_argument("--support-top-z", type=float, help="Distancia Z superior de soporte en mm (ej. 0.16 para ABS)")
+    parser.add_argument("--support-interface-spacing", type=float, help="Espaciado de interfaz en mm (ej. 0.15 losa continua)")
+    parser.add_argument("--support-interface-layers", type=int, help="Capas de interfaz superior (ej. 3)")
     parser.add_argument("--ironing", dest="ironing", action="store_true", help="Activar planchado térmico (ironing) en capas superiores")
 
     args = parser.parse_args()
@@ -408,6 +413,16 @@ def main():
         overrides["sparse_infill_pattern"] = args.infill_pattern
     if args.hole_compensation is not None:
         overrides["xy_hole_compensation"] = str(args.hole_compensation)
+    if args.support_type is not None:
+        overrides["support_type"] = args.support_type
+    if args.support_style is not None:
+        overrides["support_style"] = args.support_style
+    if args.support_top_z is not None:
+        overrides["support_top_z_distance"] = str(args.support_top_z)
+    if args.support_interface_spacing is not None:
+        overrides["support_interface_spacing"] = str(args.support_interface_spacing)
+    if args.support_interface_layers is not None:
+        overrides["support_interface_top_layers"] = str(args.support_interface_layers)
     if args.ironing:
         overrides["ironing_type"] = "top"
         overrides["ironing_pattern"] = "rectilinear"
