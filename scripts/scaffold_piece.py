@@ -147,19 +147,23 @@ if (RENDER == "preview" || RENDER == "cuerpo") {{
 ## 🛠️ Comandos de Pipeline para esta Pieza
 
 ```bash
-# 1. Compilar STL desde OpenSCAD
-openscad -D 'RENDER="cuerpo"' -o pieces/{clean_name}/artifacts/{clean_name}.stl pieces/{clean_name}/artifacts/{clean_name}.scad
+# 1. Iterar CAD solo en el draft activo (Draft-Locked, sin tocar artifacts/)
+#    Editar: pieces/{clean_name}/prototypes/draft-1/{clean_name}_draft1.scad
+openscad -D 'RENDER="cuerpo"' -o pieces/{clean_name}/prototypes/draft-1/{clean_name}_draft1.stl pieces/{clean_name}/prototypes/draft-1/{clean_name}_draft1.scad
 
-# 2. Auditar imprimibilidad y generar manifest.json
+# 2. Auditar imprimibilidad y generar manifest.json del draft
 {verify_cmd}
 
-# 3. Generar visor Three.js y vistas previas PNG
-python3 scripts/generate_gallery.py pieces/{clean_name}/artifacts/{clean_name}.scad
+# 3. Generar visor Three.js y vistas previas PNG del draft
+python3 scripts/generate_gallery.py pieces/{clean_name}/prototypes/draft-1/{clean_name}_draft1.scad
 
-# 4. Empaquetar a 3MF para OrcaSlicer / ElegooSlicer
-python3 scripts/export_3mf.py pieces/{clean_name}/artifacts/{clean_name}.stl -o pieces/{clean_name}/artifacts/{clean_name}.3mf --intent mechanical --material {material}
+# 4. Empaquetar a 3MF del draft para OrcaSlicer / ElegooSlicer
+python3 scripts/export_3mf.py pieces/{clean_name}/prototypes/draft-1/{clean_name}_draft1.stl -o pieces/{clean_name}/prototypes/draft-1/{clean_name}_draft1.3mf --intent mechanical --material {material}
 
-# 5. Registrar feedback post-impresión o consultar a Print Doctor si requiere ajuste
+# 5. Solo tras PASS fisico: promocionar a artifacts/ (unico momento de escritura ahi)
+# cp pieces/{clean_name}/prototypes/draft-1/{clean_name}_draft1.scad pieces/{clean_name}/artifacts/{clean_name}.scad
+
+# 6. Registrar feedback post-impresión o consultar a Print Doctor si requiere ajuste
 python3 scripts/feedback.py pieces/{clean_name} --status PASS --notes "Impresión y ajuste validados"
 ```
 """
@@ -229,7 +233,15 @@ python3 scripts/feedback.py pieces/{clean_name} --status PASS --notes "Impresió
         f.write(feedback_content)
 
     # 4. Inicializar draft-1 en prototypes/
-    scaffold_draft(piece_dir, 1, goal="Primer prototipo funcional de validación dimensional y mecánica.", target_device=target_device)
+    draft_dir = scaffold_draft(piece_dir, 1, goal="Primer prototipo funcional de validación dimensional y mecánica.", target_device=target_device)
+
+    # 5. Copia de trabajo CAD bloqueada al draft (Draft-Locked CAD Iteration).
+    # artifacts/<nombre>.scad es solo candidato a promocion tras PASS fisico;
+    # toda iteracion se edita en prototypes/draft-[N]/*.scad, sin ir y venir.
+    import shutil
+    draft_scad = os.path.join(draft_dir, f"{clean_name}_draft1.scad")
+    if not os.path.exists(draft_scad):
+        shutil.copy(scad_path, draft_scad)
 
     print(f"✨ Estructura de pieza creada exitosamente en: pieces/{clean_name}/")
     print(f"  ├── README.md (Ficha técnica maestra y dossier del hardware)")

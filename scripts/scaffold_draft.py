@@ -114,7 +114,29 @@ def scaffold_draft(piece_input, draft_number, goal="", target_device=""):
     print(f"  {draft_dir}/")
     print(f"  ├── EVALUATION.md (Artefacto de evaluación formal)")
     print(f"  ├── evidence/ (Directorio de evidencia fotográfica)")
-    print(f"  └── (.3mf / .stl de esta iteración)")
+    print(f"  └── (.scad de trabajo / .stl / .3mf de esta iteración)")
+
+    # Draft-Locked CAD Iteration: al abrir un draft nuevo, heredar el .scad
+    # del draft previo como punto de partida, sin tocar artifacts/.
+    import glob
+    import shutil
+    try:
+        n = int(clean_draft_num)
+    except ValueError:
+        n = None
+    if n is not None and n > 1:
+        prev_scads = []
+        for m in range(n - 1, 0, -1):
+            prev_dir = os.path.join(prototypes_dir, f"draft-{m}")
+            prev_scads = sorted(glob.glob(os.path.join(prev_dir, "*.scad")))
+            if prev_scads:
+                break
+        if prev_scads:
+            src = prev_scads[-1]
+            dst = os.path.join(draft_dir, f"{piece_name}_draft{n}.scad")
+            if not os.path.exists(dst):
+                shutil.copy(src, dst)
+                print(f"  └── {os.path.basename(dst)} (heredado de {os.path.basename(src)})")
 
     return draft_dir
 

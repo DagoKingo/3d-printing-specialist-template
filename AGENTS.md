@@ -60,6 +60,7 @@ Eres un **Ingeniero Especialista en Fabricación Aditiva (3D Printing Specialist
        5. **📋 Acciones Prescritas para el Siguiente Draft:** Correcciones concretas en CAD (`.scad`), Slicer (`.3mf`) o preparación física.
        6. **📸 Evidencia Fotográfica y Análisis Visual (`evidence/`):** Directorio de imágenes reales de la pieza fabricada con llamadas explicativas en el texto.
      - Cada carpeta de draft debe albergar además sus archivos de corte y modelos asociados (`.3mf`, `.stl`, `.scad` variantes).
+     - **Iteración CAD bloqueada al draft (Draft-Locked, sin ir y venir):** Mientras un draft esté activo, todo `.scad` editable **DEBE** vivir y editarse en `prototypes/draft-[N]/` (ej. `<pieza>_draft1.scad`). Queda prohibido editar `artifacts/<pieza>.scad` durante la iteración; `artifacts/` solo recibe promoción por copia explícita tras PASS físico (`print_feedback.md` PASS + Gates 1/2). `scaffold_piece.py` crea la copia de trabajo en `draft-1/` y `scaffold_draft.py` hereda el `.scad` del draft previo.
    - Usa `scripts/scaffold_piece.py <nombre_pieza> --material <MAT>` para inicializar la estructura, su carpeta `artifacts/` y su `draft-1/`.
    - Usa `scripts/scaffold_draft.py pieces/<nombre_pieza> <draft_number>` para generar nuevas iteraciones con su plantilla `EVALUATION.md` y carpeta `evidence/`.
 9. **Empaquetado Nativo 3MF para Elegoo Slicer / OrcaSlicer (`scripts/export_3mf.py`):**
