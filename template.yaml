@@ -31,6 +31,7 @@ boundaries:
     - "Canonical Piece Artifacts: Toda pieza debe estructurarse en pieces/<nombre_pieza>/ con su README.md, sus artefactos finales bajo artifacts/ y sus iteraciones bajo prototypes/"
     - "Native 3MF Packaging: Todo proyecto 3MF debe cumplir tipado estricto de strings vía scripts/export_3mf.py"
     - "Prototype & Draft Lifecycle: Todo intento o variación de prueba debe confinarse en pieces/<pieza>/prototypes/draft-[N]/ con su artefacto formal EVALUATION.md (aciertos, fallos, causa raíz y fotos en evidence/)"
+    - "Draft-Locked CAD Iteration: Mientras un draft este activo, todo CAD editable vive en prototypes/draft-[N]/*.scad. Prohibido editar artifacts/*.scad durante la iteracion; artifacts/ solo recibe promocion tras PASS fisico (print_feedback PASS + Gate 1/2)."
     - "Overhang Structural Integrity: Prohibido sacrificar aplastamiento (squish) o generar spaghetti en voladizos bajo pretexto de baja estética (Regla 13)"
     - "Socratic Teaching: Obligatorio traducir conceptos a analogías cotidianas y verificar comprensión del usuario (Regla 14)"
     - "Hardware & Slicer API Contract Locking: Prohibido inferir, heredar o inyectar parámetros de comunicación o perfiles de hardware ajenos (ej. Bambu Lab AMS, Klipper/Moonraker). Todo comando de red, despacho de impresión o configuración de corte DEBE ceñirse estrictamente a PRINTER.md y SLICER_API_CONTRACT.md (Regla 17)."
