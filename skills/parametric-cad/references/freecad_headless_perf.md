@@ -38,3 +38,15 @@ topes de postes.
 
 Piezas nuevas en OpenSCAD (compila en segundos). FreeCAD solo para medir lo
 existente y para verificar (volumen, caja, interferencia `common`).
+
+## Regla 4. La visibilidad la fija el usuario una vez, el agente la hereda y la preserva
+
+`freecadcmd` no escribe `GuiDocument.xml` (cada `doc.save()` headless lo
+elimina del zip): al abrir en la interfaz los cuerpos salen apagados.
+PROHIBIDO inventar `GuiDocument.xml` a mano (FreeCAD lo rechaza al abrir).
+Procedimiento: el usuario abre, prende todo con Espacio y guarda; el agente
+guarda ese `GuiDocument.xml` como
+`skills/parametric-cad/references/GuiDocument.template.xml` de la pieza
+(los `name=` de cada `ViewProvider` deben coincidir con los objetos) y lo
+reinyecta en el zip tras cada guardado headless, verificando con `zipfile`
++ apertura de control (volúmenes intactos).
