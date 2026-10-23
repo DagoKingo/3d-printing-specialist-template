@@ -48,19 +48,33 @@ OpenSCAD es el motor CAD paramétrico principal de esta plantilla: es texto plan
 3. **Operaciones Booleanas Limpias (Evitar Z-fighting):**
    - En diferencias (`difference()`), haz que los cuerpos que restan (agujeros, cortes) sobresalgan ligeramente (`+0.02 mm` a `+0.1 mm`) respecto a la cara cortada para evitar caras coincidentes de espesor infinitesimal (z-fighting / non-manifold errors).
 
-4. **Patrón de Selector `RENDER` (Exportación Multicomponente):**
-   Permite ver el ensamble completo o compilar piezas individuales para el slicer:
+4. **Patrón Completo Obligatorio (todo `.scad`, sin excepción):**
+   Todo `.scad` —paramétrico o importador de STL horneado— DEBE traer los 5
+   bloques: (1) encabezado con fuente/malla/espec medida, (2) vars (todo
+   número sale de ahí, prohibido hardcodear en módulos), (3) `RENDER`,
+   (4) módulos (`pieza()` + `cama()` + `ensamble()`, o uno por pieza),
+   (5) selector `if/else` final sin geometría suelta. Aunque la pieza ya
+   venga centrada y a cama, el selector se queda (ambas ramas llaman a
+   `pieza()`). Plantilla copiable:
+   [`../../resources/templates/scad_pattern.template.scad`](../../resources/templates/scad_pattern.template.scad).
+   Ejemplo mínimo (importador):
    ```openscad
-   RENDER = "preview"; // "preview", "base", "tapa"
+   RENDER = "cama"; // "cama" | "ensamble"
 
-   if (RENDER == "preview") {
+   module pieza() import("pieza.stl", convexity=4);
+   module cama() pieza();
+   module ensamble() pieza();
+
+   if (RENDER == "ensamble") {
        ensamble();
-   } else if (RENDER == "base") {
-       base();
-   } else if (RENDER == "tapa") {
-       tapa();
+   } else {
+       cama();
    }
    ```
+   En ensambles multicomponente el `RENDER` es
+   `"preview"` + un valor por pieza (`"preview" | "cuerpo" | "tapa" | "clip"`).
+   La coordenada de ensamble (`ENSAMBLE = [X, Y, Z]`) se mide del FCStd y
+   NO se mueve sin orden directa del usuario.
 
 ---
 
