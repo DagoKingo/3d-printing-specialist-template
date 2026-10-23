@@ -49,4 +49,6 @@ guarda ese `GuiDocument.xml` como
 `skills/parametric-cad/references/GuiDocument.template.xml` de la pieza
 (los `name=` de cada `ViewProvider` deben coincidir con los objetos) y lo
 reinyecta en el zip tras cada guardado headless, verificando con `zipfile`
-+ apertura de control (volúmenes intactos).
++ apertura de control (volúmenes intactos). Verificar siempre en coordenadas
+GLOBALES (placa aplicada): `o.Shape.BoundBox` ignora `Placement`; componer
+con `o.Placement.toMatrix()` antes de afirmar posiciones).
