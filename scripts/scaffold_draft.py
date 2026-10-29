@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 scaffold_draft.py — Generador de estructura para iteraciones y prototipos (drafts) de piezas.
-Crea el directorio 'pieces/<nombre_pieza>/prototypes/draft-[N]/' con su artefacto EVALUATION.md y carpeta evidence/.
+Crea el directorio 'pieces/<nombre_pieza>/prototypes/draft-[N]/' con EVALUATION.md, evidence/, {piece-part}/ y {piece-part}/probetas/{nombre}/.
 """
 
 import sys
@@ -26,7 +26,13 @@ def resolve_piece_dir(path_or_name):
         
     return None
 
-def scaffold_draft(piece_input, draft_number, goal="", target_device=""):
+def _sanitize_slug(name):
+    clean = re.sub(r'[^a-zA-Z0-9_\-]+', '-', name.strip().lower())
+    clean = re.sub(r'-+', '-', clean).strip('-')
+    return clean
+
+
+def scaffold_draft(piece_input, draft_number, goal="", target_device="", part="", probeta=""):
     piece_dir = resolve_piece_dir(piece_input)
     if not piece_dir:
         print(f"❌ Error: No se encontró el directorio de pieza para: {piece_input}")
@@ -46,6 +52,30 @@ def scaffold_draft(piece_input, draft_number, goal="", target_device=""):
     if not os.path.exists(gitkeep_path):
         with open(gitkeep_path, "w") as f:
             f.write("")
+
+    # Estructura canónica por pieza-parte: draft-[N]/{piece-part}/
+    # con *.sc/*.scad + *.stl + *.3mf + probetas/{nombre}/
+    part_slug = _sanitize_slug(part) if part else ""
+    probeta_slug = _sanitize_slug(probeta) if probeta else ""
+    if probeta_slug and not part_slug:
+        print("❌ Error: --probeta requiere --part (ej. --part case --probeta cunac)")
+        sys.exit(2)
+    part_dir = os.path.join(draft_dir, part_slug) if part_slug else None
+    if part_dir:
+        os.makedirs(part_dir, exist_ok=True)
+        probetas_dir = os.path.join(part_dir, "probetas")
+        os.makedirs(probetas_dir, exist_ok=True)
+        pk = os.path.join(probetas_dir, ".gitkeep")
+        if not os.path.exists(pk):
+            with open(pk, "w") as f:
+                f.write("")
+    if part_dir and probeta_slug:
+        probeta_dir = os.path.join(part_dir, "probetas", probeta_slug)
+        os.makedirs(probeta_dir, exist_ok=True)
+        readme_pb = os.path.join(probeta_dir, "README.md")
+        if not os.path.exists(readme_pb):
+            with open(readme_pb, "w", encoding="utf-8") as f:
+                f.write(f"# Probeta: {probeta_slug}\n\n**Pieza-parte:** `{part_slug}`\n**Draft:** `draft-{clean_draft_num}`\n\nArchivos: `*.sc` / `*.scad` + `*.stl` + `*.3mf` de esta probeta.\n")
 
     evaluation_path = os.path.join(draft_dir, "EVALUATION.md")
     if not os.path.exists(evaluation_path):
@@ -114,7 +144,10 @@ def scaffold_draft(piece_input, draft_number, goal="", target_device=""):
     print(f"  {draft_dir}/")
     print(f"  ├── EVALUATION.md (Artefacto de evaluación formal)")
     print(f"  ├── evidence/ (Directorio de evidencia fotográfica)")
-    print(f"  └── (.scad de trabajo / .stl / .3mf de esta iteración)")
+    print(f"  └── (.sc/.scad de trabajo / .stl / .3mf van en {part_slug}/ si se indicó --part)")
+    if part_dir:
+        print(f"  ├── {part_slug}/ (*.sc/*.scad + *.stl + *.3mf de la pieza-parte)")
+        print(f"  └── {part_slug}/probetas/{probeta_slug + '/' if probeta_slug else ''} (probetas de {part_slug})")
 
     # Draft-Locked CAD Iteration: al abrir un draft nuevo, heredar el .scad
     # del draft previo como punto de partida, sin tocar artifacts/.
@@ -128,12 +161,22 @@ def scaffold_draft(piece_input, draft_number, goal="", target_device=""):
         prev_scads = []
         for m in range(n - 1, 0, -1):
             prev_dir = os.path.join(prototypes_dir, f"draft-{m}")
-            prev_scads = sorted(glob.glob(os.path.join(prev_dir, "*.scad")))
-            if prev_scads:
+            # Buscar primero en la misma pieza-parte, luego en raíz del draft previo
+            cands = []
+            if part_slug:
+                cands += sorted(glob.glob(os.path.join(prev_dir, part_slug, "*.scad")))
+                cands += sorted(glob.glob(os.path.join(prev_dir, part_slug, "*.sc")))
+            cands += sorted(glob.glob(os.path.join(prev_dir, "*.scad")))
+            cands += sorted(glob.glob(os.path.join(prev_dir, "*.sc")))
+            if cands:
+                prev_scads = cands
                 break
         if prev_scads:
             src = prev_scads[-1]
-            dst = os.path.join(draft_dir, f"{piece_name}_draft{n}.scad")
+            if part_dir:
+                dst = os.path.join(part_dir, f"{part_slug}_draft{n}.scad")
+            else:
+                dst = os.path.join(draft_dir, f"{piece_name}_draft{n}.scad")
             if not os.path.exists(dst):
                 shutil.copy(src, dst)
                 print(f"  └── {os.path.basename(dst)} (heredado de {os.path.basename(src)})")
@@ -146,9 +189,11 @@ def main():
     parser.add_argument("draft", help="Número o nombre del draft (ej. 1, 2, draft-3)")
     parser.add_argument("--goal", default="", help="Objetivo o hipótesis que se busca validar con este draft")
     parser.add_argument("--target-device", default="", help="Dispositivo receptor asociado")
+    parser.add_argument("--part", default="", help="Pieza-parte (ej. case). Crea draft-[N]/{piece-part}/ + probetas/")
+    parser.add_argument("--probeta", default="", help="Nombre de probeta (requiere --part; ej. cunac). Crea {piece-part}/probetas/{nombre}/")
 
     args = parser.parse_args()
-    scaffold_draft(args.piece, args.draft, goal=args.goal, target_device=args.target_device)
+    scaffold_draft(args.piece, args.draft, goal=args.goal, target_device=args.target_device, part=args.part, probeta=args.probeta)
 
 if __name__ == "__main__":
     main()

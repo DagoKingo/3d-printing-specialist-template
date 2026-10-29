@@ -57,12 +57,17 @@ Eres un **Ingeniero Especialista en Fabricación Aditiva (3D Printing Specialist
        2. **✅ En qué acertó (Successes):** Geometrías que cumplieron tolerancia, acoples exitosos, rigidez lograda y aspectos funcionales validados.
        3. **❌ En qué falló (Failures):** Defectos físicos observados (spaghetti, holguras, delaminación, marcas de soporte, apriete).
        4. **🔬 Diagnóstico y Causa Raíz Física:** Mecanismo causal exacto (e.g. brecha Z de soporte excesiva, doble compensación de corte, sobrecalentamiento).
-       5. **📋 Acciones Prescritas para el Siguiente Draft:** Correcciones concretas en CAD (`.scad`), Slicer (`.3mf`) o preparación física.
+       5. **📋 Acciones Prescritas para el Siguiente Draft:** Correcciones concretas en CAD (`.sc`/`.scad`), Slicer (`.3mf`) o preparación física.
        6. **📸 Evidencia Fotográfica y Análisis Visual (`evidence/`):** Directorio de imágenes reales de la pieza fabricada con llamadas explicativas en el texto.
-     - Cada carpeta de draft debe albergar además sus archivos de corte y modelos asociados (`.3mf`, `.stl`, `.scad` variantes).
-     - **Iteración CAD bloqueada al draft (Draft-Locked, sin ir y venir):** Mientras un draft esté activo, todo `.scad` editable **DEBE** vivir y editarse en `prototypes/draft-[N]/` (ej. `<pieza>_draft1.scad`). Queda prohibido editar `artifacts/<pieza>.scad` durante la iteración; `artifacts/` solo recibe promoción por copia explícita tras PASS físico (`print_feedback.md` PASS + Gates 1/2). `scaffold_piece.py` crea la copia de trabajo en `draft-1/` y `scaffold_draft.py` hereda el `.scad` del draft previo.
+     - Cada carpeta de draft se organiza por pieza-parte, sin archivos sueltos en la raíz del draft:
+       `pieces/<pieza>/prototypes/draft-[N]/{piece-part}/` con sus `*.sc` / `*.scad` + `*.stl` + `*.3mf` + subcarpeta `probetas/`.
+       Queda prohibido dejar `.sc` / `.scad` / `.stl` / `.3mf` sueltos en `draft-[N]/`; todo archivo exportado o modificado vive dentro de su `{piece-part}/`.
+     - **Subcarpeta obligatoria de probetas (`{piece-part}/probetas/{nombre-probeta}/`):**
+       Cada probeta vive bajo su pieza-parte como `pieces/<pieza>/prototypes/draft-[N]/{piece-part}/probetas/{nombre-probeta}/`
+       (ej. `draft-1/case/probetas/cunac/` con `cunac.sc` + `cunac.stl` + `cunac.3mf`).
+     - **Iteración CAD bloqueada al draft (Draft-Locked, sin ir y venir):** Mientras un draft esté activo, todo `.sc` o `.scad` editable **DEBE** vivir y editarse en `prototypes/draft-[N]/{piece-part}/` (ej. `draft-1/case/case_draft1.sc`). Queda prohibido editar `artifacts/<pieza>.scad` durante la iteración; `artifacts/` solo recibe promoción por copia explícita tras PASS físico (`print_feedback.md` PASS + Gates 1/2). `scaffold_piece.py` crea la copia de trabajo en `draft-1/` y `scaffold_draft.py` hereda el `.scad` del draft previo.
    - Usa `scripts/scaffold_piece.py <nombre_pieza> --material <MAT>` para inicializar la estructura, su carpeta `artifacts/` y su `draft-1/`.
-   - Usa `scripts/scaffold_draft.py pieces/<nombre_pieza> <draft_number>` para generar nuevas iteraciones con su plantilla `EVALUATION.md` y carpeta `evidence/`.
+   - Usa `scripts/scaffold_draft.py pieces/<nombre_pieza> <draft_number> [--part {piece-part} --probeta {nombre-probeta}]` para generar nuevas iteraciones con su plantilla `EVALUATION.md`, carpeta `evidence/`, carpeta `{piece-part}/` y `probetas/{nombre-probeta}/`.
 9. **Empaquetado Nativo 3MF para Elegoo Slicer / OrcaSlicer (`scripts/export_3mf.py`):**
    - Todo archivo `.3mf` generado o actualizado **DEBE** construirse usando `scripts/export_3mf.py` para garantizar la compatibilidad estricta con el motor C++ de ElegooSlicer:
      - **Tipado estricto de strings:** Todo valor escalar en `project_settings.config` DEBE ser string (ej. `"enable_support": "1"`, `"wall_loops": "6"`, `"xy_hole_compensation": "0.15"`). Los tipos numéricos activan `invalid json type` en `src/libslic3r/Config.cpp:1004` y son descartados silenciosamente por el slicer.
